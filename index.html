@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cinnabar on Dolomite</title>
+    <script src='scripts/jquery-1.10.2.min.js' type='text/javascript'></script>
+    <script src='scripts/knockout-3.0.0.js' type='text/javascript'></script>
+
+</head>
+<body>
+<div style='width:25%'>
+    <form data-bind="visible: !loggedIn()">
+        <p>
+            <label for='username'>Username: </label>
+            <input type='text' id='username' data-bind='value: username' />
+        </p>
+        <p>
+            <label for='password'>Password: </label>
+            <input type='password' id='password' data-bind='value: password' />
+        </p>
+        <p>
+            <button data-bind="click: submitLogin">
+                Log In
+            </button>
+        </p>
+    </form>
+    <p style='color:red' data-bind="text: notice"></p>
+</div>
+
+<div data-bind="visible: libraryLoaded">
+    <div style="width:25%; float:left; border-right:solid 2px black">
+        <h2>Playlists</h2>
+        <h3><a href="#" data-bind="click: loadLibrary">All Tracks</a></h3>
+        <h3>Auto Playlists</h3>
+        <ul data-bind="foreach: autoPlaylists">
+            <li data-bind="text: Name"></li>
+        </ul>
+        <h3>Playlists</h3>
+        <ul data-bind="foreach: staticPlaylists">
+            <li><a href='#' data-bind="text: Name, click: $root.loadStaticPlaylist"></a></li>
+        </ul>
+    </div>
+    <div style="width:74%; float:left;">
+        <h2>Tracks</h2>
+        <table style="width:100%">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Artist</th>
+                <th>Album</th>
+                <th>Play</th>
+            </tr>
+            </thead>
+            <tbody data-bind="foreach: visibleTracks">
+            <tr>
+                <td data-bind="text: Metadata.Title"></td>
+                <td data-bind="text: Metadata.Artist"></td>
+                <td data-bind="text: Metadata.Album"></td>
+                <td><button data-bind="click: $root.play">Play</button></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style='position:fixed; bottom:0; left:0; width:100%'>
+    <img data-bind="attr: {src: playingCover}" style='height:200px; width:200px;' />
+    <br />
+    <audio data-bind="attr: {src: playingHref}" controls autoplay style="width:100%"></audio>
+</div>
+
+</body>
+<script src='scripts/app.js' type='text/javascript'></script>
+</html>
