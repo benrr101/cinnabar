@@ -60,22 +60,22 @@
     <div id='leftBar'>
         <div id='navBar' class='playing'>
             <ul>
-                <li class='selectable' data-bind="click: showAllTracks">Tracks</li>
-                <li class='selectable'>Artists</li>
-                <li class='selectable'>Albums</li>
-                <li class='selectable'>Genres</li>
+                <li class='selectable' data-bind="click: showAllTracks, css:{selected: visiblePane() == 'tracks'}">Tracks</li>
+                <li class='selectable' data-bind="css:{selected: visiblePane() == 'artists'}">Artists</li>
+                <li class='selectable' data-bind="css:{selected: visiblePane() == 'albums'}">Albums</li>
+                <li class='selectable' data-bind="css:{selected: visiblePane() == 'genres'}">Genres</li>
                 <li>
                     Auto Playlists
                     <button class='addButton' title='Add Auto Playlist'><img src='img/plus.png' alt='+' /></button>
                     <ul data-bind="foreach: navAutoPlaylists()">
-                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto')"></li>
+                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto'), css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
                     </ul>
                 </li>
                 <li>
                     Playlists
                     <button class='addButton' title='Add Playlist'><img src='img/plus.png' alt='+' /></button>
                     <ul data-bind="foreach: navStaticPlaylists()">
-                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static')"></li>
+                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static'), css:{selected: $root.visiblePane() == 'static' + Id}"></li>
                     </ul>
                 </li>
             </ul>

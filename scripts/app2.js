@@ -79,6 +79,7 @@ function ViewModel() {
     self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
     self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
+    self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -141,23 +142,23 @@ function ViewModel() {
         if(type == "static") {
             // Check for the playlist in the cache
             if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist(self.staticPlaylists[playlist.Id]);
+                self.showPlaylist("static", self.staticPlaylists[playlist.Id]);
                 return;
             } else {
                 params.success = function(jqXHR) { // Cache the playlist
                     self.staticPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist(jqXHR);
+                    self.showPlaylist("static", jqXHR);
                 };
             }
         } else {
             // Check for the playlist in the cache
             if(typeof self.autoPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist(self.autoPlaylists[playlist.Id]);
+                self.showPlaylist("auto", self.autoPlaylists[playlist.Id]);
                 return;
             } else {
                 params.success = function(jqXHR) { // Cache the playlist
                     self.autoPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist(jqXHR);
+                    self.showPlaylist("auto", jqXHR);
                 };
             }
         }
@@ -186,7 +187,10 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.showPlaylist = function(playlist) {
+    self.showPlaylist = function(type, playlist) {
+        // Set the visible pane
+        self.visiblePane(type + playlist.Id);
+
         // Clean out the visible tracks
         self.trackVisibleTracks([]);
 
@@ -197,6 +201,9 @@ function ViewModel() {
     }
 
     self.showAllTracks = function() {
+        // Set the visible pane
+        self.visiblePane("tracks");
+
         self.trackVisibleTracks([]);
 
         for(var i in self.trackLibrary) {
