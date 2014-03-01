@@ -90,6 +90,32 @@
         </span>
         <input type='text' placeholder="Search Tracks"/>
     </div>
+    <div id='trackPane'>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Track #</th>
+                    <th>Title</th>
+                    <th>Time</th>
+                    <th>Artist</th>
+                    <th>Album</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: trackVisibleTracks()">
+                <tr>
+                    <td></td>
+                    <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
+                    <td data-bind="text: Metadata.Title"></td>
+                    <td data-bind="text: calculateTrackTime(Metadata.Duration)"></td>
+                    <td data-bind="text: Metadata.Artist"></td>
+                    <td data-bind="text: Metadata.Album"></td>
+                    <td data-bind="text: Metadata.Year"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 <!--
 <div data-bind="visible: libraryLoaded">

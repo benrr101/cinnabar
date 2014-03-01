@@ -67,6 +67,9 @@ button { border:0; padding: 10px 20px; margin:0; font-family:"PS", sans-serif; t
 button:hover {cursor:pointer;}
 ul {padding: 0; margin: 0;}
 li { list-style: none; }
+table { padding: 10px; }
+th { font-family: "PSBold"; text-align: left; border-bottom:2px solid #dcdcdc; }
+td { padding-top:7px; padding-bottom:7px; }
 
 /* Global classes */
 .centerH { margin-left: auto; margin-right: auto; }
@@ -104,7 +107,7 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 #navBar ul ul { font-size: 0.632em; }
 #navBar ul ul li { position: relative; padding-top:2.5px; padding-bottom:2.5px}
 #navBar ul ul li:before { left:-20px; padding-bottom:0; }
-#navBar button.addButton { position: absolute; right:20px; padding: 0; height: 20px; width: 20px; background-color: #477e22; color: #ddccdd }
+#navBar button.addButton { position: absolute; right:20px; padding: 0; height: 20px; width: 20px; background-color: #477e22; color: #dcdcdc }
 #navBar button.addButton:hover { background-color: #3f5f2b; }
 #navBar button.addButton img { position: absolute; left:5px; top:5px; }
 
@@ -120,6 +123,9 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 #topBar > div { float:left;}
 #topBar .button.small { margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0; }
 #topBar .button.large { margin-top:10px; padding:10px; line-height:0;}
+
+#trackPane {float: left; width: calc(100% - 295px); font-size:0.8em;}
+#trackPane table { width: 100%; border-collapse: collapse; margin:10px;}
 
 #playControls { height:100px; width:185px; margin-left:15px;}
 #playControls > div {float:left;}
