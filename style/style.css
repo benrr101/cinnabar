@@ -62,7 +62,7 @@
 html { height: 100%; font-size: 1.188em; -webkit-text-size-adjust: 1.188em; -ms-text-size-adjust: 1.188em; }
 body { height: 100%; margin:0; padding:0; font-family: "PS", sans-serif; color: #dcdcdc; background-color: #282829}
 h1, h2, h3, h4 { font-weight: normal; }
-input { border:0; margin:0; padding: 12px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"PS", sans-serif; }
+input { border:0; margin:0; padding: 12px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"PS", sans-serif; font-size: 0.875em; }
 button { border:0; padding: 10px 20px; margin:0; font-family:"PS", sans-serif; transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
 button:hover {cursor:pointer;}
 ul {padding: 0; margin: 0;}
@@ -77,7 +77,11 @@ div.button:before { position:absolute; top:0; left:0; height:100%; width:100%; c
 div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 
 /* Specific Styles */
-#loginForm { width:380px; padding:20px; background-color: #0055d4; }
+#modals { position:absolute; left:0; top:0; z-index:999; height:100%; width: 100%; background-color:rgba(25,25,26,0.7)}
+
+#genError { position: relative; width:380px; padding:20px; background-color: #0055d4; }
+
+#loginForm { position: relative; width:380px; padding:20px; background-color: #0055d4; }
 #loginForm h1 { margin-top:0px; margin-bottom: 20px; }
 #loginForm input { width: 360px; margin-bottom: 20px; }
 #loginForm button { background-color: #dcdcdc; color: #1f1f21; }
