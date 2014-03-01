@@ -1,0 +1,130 @@
+/* PT Sans Font */
+@font-face {
+    font-family: 'PSBold';
+    src:url('persansb-webfont.ttf') format('truetype'),
+        url('persansb-webfont.woff') format('woff'),
+        url('persansb-webfont.svg') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PSBoldItalic';
+    src:url('persanbi-webfont.ttf') format('truetype'),
+    url('persanbi-webfont.woff') format('woff'),
+    url('persanbi-webfont.svg') format('svg');
+    font-weight: bold;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PSBolder';
+    src:url('persanbk-webfont.ttf') format('truetype'),
+    url('persanbk-webfont.woff') format('woff'),
+    url('persanbk-webfont.svg') format('svg');
+    font-weight: bolder;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PSBolderItalic';
+    src:url('persabki-webfont.ttf') format('truetype'),
+    url('persabki-webfont.woff') format('woff'),
+    url('persabki-webfont.svg') format('svg');
+    font-weight: bolder;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PS';
+    src:url('persans-webfont.ttf') format('truetype'),
+    url('persans-webfont.woff') format('woff'),
+    url('persans-webfont.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PSItalic';
+    src:url('persansi-webfont.ttf') format('truetype'),
+    url('persansi-webfont.woff') format('woff'),
+    url('persansi-webfont.svg') format('svg');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Fixes for hideousness on chrome */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    @font-face { font-family: 'PSBold'; src:url('persansb-webfont.svg') format('svg'); }
+    @font-face { font-family: 'PSBoldItalic'; src:url('persanbi-webfont.svg') format('svg'); }
+    @font-face { font-family: 'PSBolder'; src:url('persanbk-webfont.svg') format('svg'); }
+    @font-face { font-family: 'PSBolderItalic'; src:url('persabki-webfont.svg') format('svg'); }
+    @font-face { font-family: 'PS'; src:url('persans-webfont.svg') format('svg'); }
+    @font-face { font-family: 'PSItalic'; src:url('persansi-webfont.svg') format('svg'); }
+}
+
+/* Global styles */
+html { height: 100%; font-size: 1.188em; -webkit-text-size-adjust: 1.188em; -ms-text-size-adjust: 1.188em; }
+body { height: 100%; margin:0; padding:0; font-family: "PS", sans-serif; color: #dcdcdc; background-color: #282829}
+h1, h2, h3, h4 { font-weight: normal; }
+input { border:0; margin:0; padding: 12px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"PS", sans-serif; }
+button { border:0; padding: 10px 20px; margin:0; font-family:"PS", sans-serif; transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
+button:hover {cursor:pointer;}
+ul {padding: 0; margin: 0;}
+li { list-style: none; }
+
+/* Global classes */
+.centerH { margin-left: auto; margin-right: auto; }
+.centerV { transform: translate(0, 50%); -ms-transform: translate(0, 50%); -webkit-transform: translate(0, 50%); }
+.hidden { display: none; }
+div.button { display: inline-block; position:relative;}
+div.button:before { position:absolute; top:0; left:0; height:100%; width:100%; content:"."; color: transparent; transition: all ease 0.4s; }
+div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
+
+/* Specific Styles */
+#loginForm { width:380px; padding:20px; background-color: #0055d4; }
+#loginForm h1 { margin-top:0px; margin-bottom: 20px; }
+#loginForm input { width: 360px; margin-bottom: 20px; }
+#loginForm button { background-color: #dcdcdc; color: #1f1f21; }
+#loginForm button:hover { background-color: #a5a5a5; }
+
+#topBar { width: 100%; height: 100px; background-color: #19191a}
+
+#mainPane { width: 100%; height: calc(100% - 100px); }
+
+#leftBar { float: left; width: 275px; height: 100%; background-color: #1f1f21;}
+
+#navBar { width: 100%; overflow-x: hidden; overflow-y: auto;}
+#navBar.playing { height: calc(100% - 275px);}
+#navBar li { transition: all ease 0.4s; -webkit-transition: all ease 0.4s; }
+#navBar li:before { position:absolute; top:0; left:0; height:100%; content: "."; color: transparent; border-left:7px solid #1f1f21; padding-bottom:2px; transition: all ease 0.4s; -webkit-transition: all ease 0.4s; }
+#navBar ul li.selected:before, #leftBar ul li.selectable:hover:before { border-left: 7px solid #0055d4; }
+#navBar ul li.selectable:hover { background-color: #282829; cursor: pointer; }
+#navBar > ul { font-size: 1.375em; }
+#navBar > ul > li { position:relative; padding: 12px 20px 8px 20px; border-bottom: 2px solid #282829; }
+#navBar ul ul { font-size: 0.632em; }
+#navBar ul ul li { position: relative; padding-top:2.5px; padding-bottom:2.5px}
+#navBar ul ul li:before { left:-20px; padding-bottom:0; }
+#navBar button.addButton { position: absolute; right:20px; padding: 0; height: 20px; width: 20px; background-color: #477e22; color: #ddccdd }
+#navBar button.addButton:hover { background-color: #3f5f2b; }
+#navBar button.addButton img { position: absolute; left:5px; top:5px; }
+
+#albumArt { position:absolute; bottom:0; left:0;}
+#albumArt img { height: 275px; width: 275px; margin-left: auto; margin-right: auto;}
+
+#infoBar { float:left; width: calc(100% - 315px); padding-left:20px; padding-right:20px; }
+#infoBar span { display: inline-block; margin-top: 10px; margin-bottom:10px; font-size: 1.375em;}
+#infoBar input { float:right; width:300px; margin-top:5px; margin-bottom:5px; padding-right:40px; font-size:0.875em; background: #dcdcdc url('../img/search.png') no-repeat right 10px top 10px; }
+
+#logo { margin-left:15px; margin-top: 15px; }
+
+#topBar > div { float:left;}
+#topBar .button.small { margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0; }
+#topBar .button.large { margin-top:10px; padding:10px; line-height:0;}
+
+#playControls { height:100px; width:185px; margin-left:15px;}
+#playControls > div {float:left;}
+#playControls .button.small  { margin-left: 0; margin-right:0; }
+
+#playSlider { height: 100px; width: calc(100% - 275px - 265px); padding-left:10px; padding-right:10px;}
+#scrubber {width:100%; height: 5px; margin-top: 32px; background-color:#dcdcdc;}
+#played { position:relative; height: 5px; background-color: #0055d4;}
+#played:after { position:absolute; right:0px; top:-7px; width:7px; height:21px; content: "."; color: transparent; background-color: #0055d4; }
+#playInfo {font-size:0.750em; margin-top:20px; }
+#trackInfo { float: left; }
+#timeInfo { float: right; }

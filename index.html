@@ -2,12 +2,92 @@
 <html>
 <head>
     <title>Cinnabar on Dolomite</title>
-    <script src='scripts/jquery-1.10.2.min.js' type='text/javascript'></script>
+    <script src='scripts/jquery-2.1.0.min.js' type='text/javascript'></script>
     <script src='scripts/knockout-3.0.0.js' type='text/javascript'></script>
-
+    <link href="style/style.css" rel="stylesheet" type='text/css'/>
 </head>
 <body>
-<div style='width:25%'>
+<div id='loginForm' class="centerH centerV hidden">
+    <h1>Login to Dolomite</h1>
+    <label for='loginUsername'>Username:</label>
+    <input type='text' id='loginUsername' />
+    <label for='loginPassword'>Password:</label>
+    <input type='password' id='loginPassword' />
+    <button type='button'>Login</button>
+</div>
+<div id='topBar'>
+    <div id='logo'>
+        <img src='img/logo.png' title="Cinnabar on Dolomite" />
+    </div>
+    <div id='playControls'>
+        <div class='button small'>
+            <img src='img/back.png' alt='back' title='Previous Track' />
+        </div>
+        <div class='button large'>
+            <img src='img/play.png' alt='play' title='Play/Pause' />
+        </div>
+        <div class='button small'>
+            <img src='img/forward.png' alt='forward' title='Next Track' />
+        </div>
+    </div>
+    <div id='playSlider'>
+        <div id='scrubber'>
+            <div id='played' style='width:75%'></div>
+        </div>
+        <div id='playInfo'>
+            <div id='trackInfo'>Tell (Original Mix) | PROFF | Abandoned / Albina / Tell</div>
+            <div id='timeInfo'>5:15 / 7:59</div>
+        </div>
+    </div>
+    <div id='listControls'>
+        <div class='button small'><img src='img/shuffle.png' alt='shuffle' title='Shuffle On/Off' /></div>
+        <div class='button small'><img src='img/repeat_selected.png' alt='repeat' title='Repeat On/Off' /></div>
+    </div>
+    <div id='settings'>
+        <div class='button small'><img src='img/volume.png' alt='volume' title='Volume' /></div>
+        <div class='button small'><img src='img/options.png' alt='settings' title='Settings' /></div>
+    </div>
+</div>
+<div id='mainPane'>
+    <div id='leftBar'>
+        <div id='navBar' class='playing'>
+            <ul>
+                <li class='selectable selected'>Tracks</li>
+                <li class='selectable'>Artists</li>
+                <li class='selectable'>Albums</li>
+                <li class='selectable'>Genres</li>
+                <li>
+                    Auto Playlists
+                    <button class='addButton' title='Add Auto Playlist'><img src='img/plus.png' alt='+' /></button>
+                    <ul>
+                        <li class='selectable'>'80s</li>
+                        <li class='selectable'>Popless</li>
+                        <li class='selectable'>Recently Added</li>
+                    </ul>
+                </li>
+                <li>
+                    Playlists
+                    <button class='addButton' title='Add Playlist'><img src='img/plus.png' alt='+' /></button>
+                    <ul>
+                        <li class='selectable'>Atmospheric Trance</li>
+                        <li class='selectable'>MF Doom & Associates</li>
+                        <li class='selectable'>Some Other Stuff</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div id='albumArt'>
+            <img src='img/test.jpeg' />
+        </div>
+    </div>
+    <div id='infoBar' style='height:48px; background-color:#0055d4;'>
+        <span>
+            3299 Tracks | 1 week 4 days 11 hours 44 minutes
+        </span>
+        <input type='text' placeholder="Search Tracks"/>
+    </div>
+</div>
+<!--<div style=''>
     <form data-bind="visible: !loggedIn()">
         <p>
             <label for='username'>Username: </label>
@@ -67,7 +147,7 @@
     <br />
     <audio data-bind="attr: {src: playingHref}" controls autoplay style="width:100%"></audio>
 </div>
-
+-->
 </body>
 <script src='scripts/app.js' type='text/javascript'></script>
 </html>
