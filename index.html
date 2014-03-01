@@ -60,7 +60,7 @@
     <div id='leftBar'>
         <div id='navBar' class='playing'>
             <ul>
-                <li class='selectable selected'>Tracks</li>
+                <li class='selectable' data-bind="click: showAllTracks">Tracks</li>
                 <li class='selectable'>Artists</li>
                 <li class='selectable'>Albums</li>
                 <li class='selectable'>Genres</li>
@@ -68,14 +68,14 @@
                     Auto Playlists
                     <button class='addButton' title='Add Auto Playlist'><img src='img/plus.png' alt='+' /></button>
                     <ul data-bind="foreach: navAutoPlaylists()">
-                        <li class='selectable' data-bind="text: Name"></li>
+                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto')"></li>
                     </ul>
                 </li>
                 <li>
                     Playlists
                     <button class='addButton' title='Add Playlist'><img src='img/plus.png' alt='+' /></button>
                     <ul data-bind="foreach: navStaticPlaylists()">
-                        <li class='selectable' data-bind="text: Name"></li>
+                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static')"></li>
                     </ul>
                 </li>
             </ul>

@@ -38,6 +38,11 @@ function calculateTrackNumber(trackNumber, discNumber) {
     return result;
 }
 
+/**
+ * Generates a string of hh:mm:ss based on the length of a track in seconds
+ * @param time  int The length of the track in seconds
+ * @returns string  HH:MM:SS format of the track length
+ */
 function calculateTrackTime(time) {
     time = parseInt(time);
 
@@ -67,7 +72,9 @@ function ViewModel() {
     self.loginPassword = ko.observable();       // Used for storing the password the user is logging in with.
     self.loginUsername = ko.observable();       // Used for storing the username the user is logging in with.
 
-    self.trackLibrary = {};                     // Used for storing all tracks.
+    self.trackLibrary = {};                     // Used for caching all tracks.
+    self.autoPlaylists = {};                    // Used for caching all auto playlists
+    self.staticPlaylists = {};                  // Used for caching all static playlists
 
     self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
     self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
@@ -121,6 +128,46 @@ function ViewModel() {
         $.ajax(params);
     }
 
+    self.loadPlaylist = function(type, playlist) {
+        // Set up the parameters in case we need to look it up
+        var params = baseAjaxParams;
+        delete params.data;
+        params.type = "GET";
+        params.url = serverAddress + playlist.Href;
+        params.error = function(jqXHR) { // Show error message
+            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
+        };
+
+        if(type == "static") {
+            // Check for the playlist in the cache
+            if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
+                self.showPlaylist(self.staticPlaylists[playlist.Id]);
+                return;
+            } else {
+                params.success = function(jqXHR) { // Cache the playlist
+                    self.staticPlaylists[jqXHR.Id] = jqXHR;
+                    self.showPlaylist(jqXHR);
+                };
+            }
+        } else {
+            // Check for the playlist in the cache
+            if(typeof self.autoPlaylists[playlist.Id] !== "undefined") {
+                self.showPlaylist(self.autoPlaylists[playlist.Id]);
+                return;
+            } else {
+                params.success = function(jqXHR) { // Cache the playlist
+                    self.autoPlaylists[jqXHR.Id] = jqXHR;
+                    self.showPlaylist(jqXHR);
+                };
+            }
+        }
+        try {
+        $.ajax(params);
+        } catch (e) {
+            alert(e);
+        }
+    }
+
     self.loadTrackLibrary = function(setVisible) {
         var params = baseAjaxParams;
         delete params.data;
@@ -137,6 +184,25 @@ function ViewModel() {
         };
         $.ajax(params);
     };
+
+    // NON-AJAX ACTIONS ////////////////////////////////////////////////////
+    self.showPlaylist = function(playlist) {
+        // Clean out the visible tracks
+        self.trackVisibleTracks([]);
+
+        // Iterate over the tracks in the playlist and add them to the visible tracks
+        for(var i = 0; i < playlist.Tracks.length; ++i) {
+            self.trackVisibleTracks.push(self.trackLibrary[playlist.Tracks[i]]);
+        }
+    }
+
+    self.showAllTracks = function() {
+        self.trackVisibleTracks([]);
+
+        for(var i in self.trackLibrary) {
+            self.trackVisibleTracks.push(self.trackLibrary[i]);
+        }
+    }
 }
 
 // Activates knockout.js
