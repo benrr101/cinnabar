@@ -11,11 +11,16 @@ jQuery.support.cors = true;
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 var serverAddress = "https://localhost:8080/";
 
-var baseAjaxParams = {
-    contentType: "application/json; charset=utf-8",
-    dataType: "json",
-    xhrFields: { withCredentials:true }
-};
+function getBaseAjaxParams(method, url) {
+    var newAjaxParams = {
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        xhrFields: { withCredentials:true },
+        type: method,
+        url: url
+    };
+    return newAjaxParams;
+}
 
 // UTILITY FUNCTIONS ///////////////////////////////////////////////////////
 /**
@@ -81,12 +86,14 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
+    self.playing = ko.observable(false);        // Whether or not there are tracks playing
+    self.playingTrack = ko.observable();        // The playing track
+    self.playingAudioObject = null;             // The currently playing audio object
+
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
-        var params = baseAjaxParams;
+        var params = getBaseAjaxParams("POST", serverAddress + "users/login");
         params.data  = JSON.stringify({Username: self.loginUsername(), Password: self.loginPassword(), ApiKey: apiKey});
-        params.type  = "POST";
-        params.url   = serverAddress + "users/login";
         params.error = function(jqXHR) { // Show an error message
             self.loginNotice(jqXHR.status != 0 && jqXHR.responseJSON ? jqXHR.responseJSON.Message : "Login failed for unknown reason.");
         };
@@ -102,10 +109,7 @@ function ViewModel() {
     };
 
     self.loadAutoPlaylists = function() {
-        var params = baseAjaxParams;
-        delete params.data;
-        params.type  = "GET";
-        params.url   = serverAddress + "playlists/auto/";
+        var params = getBaseAjaxParams("GET", serverAddress + "playlists/auto/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
         }
@@ -116,10 +120,7 @@ function ViewModel() {
     }
 
     self.loadStaticPlaylists = function() {
-        var params = baseAjaxParams;
-        delete params.data;
-        params.type  = "GET";
-        params.url   = serverAddress + "playlists/static/";
+        var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
         }
@@ -131,10 +132,7 @@ function ViewModel() {
 
     self.loadPlaylist = function(type, playlist) {
         // Set up the parameters in case we need to look it up
-        var params = baseAjaxParams;
-        delete params.data;
-        params.type = "GET";
-        params.url = serverAddress + playlist.Href;
+        var params = getBaseAjaxParams("GET", serverAddress + playlist.Href);
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
         };
@@ -162,18 +160,11 @@ function ViewModel() {
                 };
             }
         }
-        try {
         $.ajax(params);
-        } catch (e) {
-            alert(e);
-        }
     }
 
     self.loadTrackLibrary = function(setVisible) {
-        var params = baseAjaxParams;
-        delete params.data;
-        params.type = "GET";
-        params.url = serverAddress + "tracks/";
+        var params = getBaseAjaxParams("GET", serverAddress + "tracks/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
         };
@@ -185,6 +176,24 @@ function ViewModel() {
         };
         $.ajax(params);
     };
+
+    self.fetchAndPlayTrack = function(track) {
+        // Fetch the track if we don't have it
+        if(self.trackLibrary[track.Id].Qualities === null) {
+            var params = getBaseAjaxParams("GET", serverAddress + "tracks/" + track.Id);
+            params.error = function(jqXHR) {
+                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
+            }
+            params.success = function(jqXHR) {
+                // Store the track in the library cache
+                self.trackLibrary[jqXHR.Id] = jqXHR;
+                self.playTrack(self.trackLibrary[jqXHR.Id]);
+            }
+            $.ajax(params);
+        } else {
+            self.playTrack(self.trackLibrary[track.Id]);
+        }
+    }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
     self.showPlaylist = function(type, playlist) {
@@ -209,6 +218,22 @@ function ViewModel() {
         for(var i in self.trackLibrary) {
             self.trackVisibleTracks.push(self.trackLibrary[i]);
         }
+    }
+
+    self.playTrack = function(track) {
+        //@TODO: Determine what quality to play
+        // Create an audio thing if needed
+        if(self.playingAudioObject !== null) {
+            self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
+        } else {
+            self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
+        }
+
+        // Set up the visuals for the playing audio
+
+        // Start that shit up!
+        self.playing(true);
+        self.playingAudioObject.play();
     }
 }
 

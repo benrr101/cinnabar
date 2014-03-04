@@ -39,10 +39,10 @@
         </div>
     </div>
     <div id='playSlider'>
-        <div id='scrubber'>
+        <div id='scrubber' data-bind="visible: playing();">
             <div id='played' style='width:75%'></div>
         </div>
-        <div id='playInfo'>
+        <div id='playInfo' data-bind="visible: playing();">
             <div id='trackInfo'>Tell (Original Mix) | PROFF | Abandoned / Albina / Tell</div>
             <div id='timeInfo'>5:15 / 7:59</div>
         </div>
@@ -105,7 +105,7 @@
             </thead>
             <tbody data-bind="foreach: trackVisibleTracks()">
                 <tr>
-                    <td></td>
+                    <td><span data-bind="click: $root.fetchAndPlayTrack">Play</span></td>
                     <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
                     <td data-bind="text: Metadata.Title"></td>
                     <td data-bind="text: calculateTrackTime(Metadata.Duration)"></td>
