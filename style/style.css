@@ -96,7 +96,7 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 
 #leftBar { float: left; width: 275px; height: 100%; background-color: #1f1f21;}
 
-#navBar { width: 100%; overflow-x: hidden; overflow-y: auto;}
+#navBar { width: 100%; overflow-x: hidden; overflow-y: auto; }
 #navBar.playing { height: calc(100% - 275px);}
 #navBar li { transition: all ease 0.4s; -webkit-transition: all ease 0.4s; }
 #navBar li:before { position:absolute; top:0; left:0; height:100%; content: "."; color: transparent; border-left:7px solid #1f1f21; padding-bottom:2px; transition: all ease 0.4s; -webkit-transition: all ease 0.4s; }
