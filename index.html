@@ -31,8 +31,9 @@
         <div class='button small'>
             <img src='img/back.png' alt='back' title='Previous Track' />
         </div>
-        <div class='button large'>
-            <img src='img/play.png' alt='play' title='Play/Pause' />
+        <div class='button large' data-bind="click: togglePlayback">
+            <img src='img/pause.png' alt='pause' title='Play/Pause' data-bind="visible: playing() == 'playing'" />
+            <img src='img/play.png' alt='play' title='Play/Pause' data-bind="visible: playing() == 'paused' || !playing()"/>
         </div>
         <div class='button small'>
             <img src='img/forward.png' alt='forward' title='Next Track' />
@@ -65,7 +66,7 @@
 </div>
 <div id='mainPane'>
     <div id='leftBar'>
-        <div id='navBar' class='playing'>
+        <div id='navBar' data-bind="css:{playing: playing() != false}">
             <ul>
                 <li class='selectable' data-bind="click: showAllTracks, css:{selected: visiblePane() == 'tracks'}">Tracks</li>
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'artists'}">Artists</li>
@@ -87,8 +88,8 @@
                 </li>
             </ul>
         </div>
-        <div id='albumArt'>
-            <img src='img/test.jpeg' />
+        <div id='albumArt' data-bind="visible: playing() != false">
+            <img data-bind="attr:{src: playingTrack().ArtHref != null ? playingArt() : ''}" />
         </div>
     </div>
     <div id='infoBar' style='height:48px; background-color:#0055d4;'>
@@ -124,49 +125,6 @@
         </table>
     </div>
 </div>
-<!--
-<div data-bind="visible: libraryLoaded">
-    <div style="width:25%; float:left; border-right:solid 2px black">
-        <h2>Playlists</h2>
-        <h3><a href="#" data-bind="click: loadLibrary">All Tracks</a></h3>
-        <h3>Auto Playlists</h3>
-        <ul data-bind="foreach: autoPlaylists">
-            <li data-bind="text: Name"></li>
-        </ul>
-        <h3>Playlists</h3>
-        <ul data-bind="foreach: staticPlaylists">
-            <li><a href='#' data-bind="text: Name, click: $root.loadStaticPlaylist"></a></li>
-        </ul>
-    </div>
-    <div style="width:74%; float:left;">
-        <h2>Tracks</h2>
-        <table style="width:100%">
-            <thead>
-            <tr>
-                <th>Title</th>
-                <th>Artist</th>
-                <th>Album</th>
-                <th>Play</th>
-            </tr>
-            </thead>
-            <tbody data-bind="foreach: visibleTracks">
-            <tr>
-                <td data-bind="text: Metadata.Title"></td>
-                <td data-bind="text: Metadata.Artist"></td>
-                <td data-bind="text: Metadata.Album"></td>
-                <td><button data-bind="click: $root.play">Play</button></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div style='position:fixed; bottom:0; left:0; width:100%'>
-    <img data-bind="attr: {src: playingCover}" style='height:200px; width:200px;' />
-    <br />
-    <audio data-bind="attr: {src: playingHref}" controls autoplay style="width:100%"></audio>
-</div>
--->
 </body>
 <script src='scripts/app2.js' type='text/javascript'></script>
 </html>

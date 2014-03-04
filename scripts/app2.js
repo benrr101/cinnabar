@@ -88,6 +88,7 @@ function ViewModel() {
 
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
+    self.playingArt = ko.observable();                          // The Href for the currently playing album art
     self.playingAudioObject = null;                             // The currently playing audio object
     self.playingProgress = ko.observable(0)                     // The played percentage of the track
     self.playingProgressTime = ko.observable(0)                 // The time played
@@ -198,6 +199,29 @@ function ViewModel() {
     }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
+    self.playTrack = function(track) {
+        //@TODO: Determine what quality to play
+        // Create an audio thing if needed
+        if(self.playingAudioObject !== null) {
+            self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
+        } else {
+            self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
+            self.playingAudioObject.ontimeupdate = function(e) {
+                var time = e.target.currentTime;
+                self.playingProgress(time / e.target.duration * 100);
+                self.playingProgressTime(calculateTrackTime(time));
+            }
+        }
+
+        // Start that shit up!
+        self.playing("playing");
+        self.playingArt(serverAddress + track.ArtHref);
+        self.playingTrack(track);
+        self.playingProgressTime(calculateTrackTime(0));
+        self.playingProgress(0);
+        self.playingAudioObject.play();
+    }
+
     self.showPlaylist = function(type, playlist) {
         // Set the visible pane
         self.visiblePane(type + playlist.Id);
@@ -222,29 +246,18 @@ function ViewModel() {
         }
     }
 
-    self.playTrack = function(track) {
-        //@TODO: Determine what quality to play
-        // Create an audio thing if needed
-        if(self.playingAudioObject !== null) {
-            self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
+    self.togglePlayback = function() {
+        // @TODO: If the audio object doesn't exist, grab the beginning of the playlist
+        if(self.playingAudioObject.paused) {
+            self.playingAudioObject.play();
+            self.playing("playing");
         } else {
-            self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
-            self.playingAudioObject.ontimeupdate = function(e) {
-                var time = e.target.currentTime;
-                self.playingProgress(time / e.target.duration * 100);
-                self.playingProgressTime(calculateTrackTime(time));
-            }
+            self.playingAudioObject.pause();
+            self.playing("paused");
         }
-
-        // Set up the visuals for the playing audio
-
-        // Start that shit up!
-        self.playing(true);
-        self.playingTrack(track);
-        self.playingProgressTime(calculateTrackTime(0));
-        self.playingProgress(0);
-        self.playingAudioObject.play();
     }
+
+
 }
 
 // Activates knockout.js
