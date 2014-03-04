@@ -40,11 +40,18 @@
     </div>
     <div id='playSlider'>
         <div id='scrubber' data-bind="visible: playing();">
-            <div id='played' style='width:75%'></div>
+            <div id='played' data-bind="style:{width: playingProgress() + '%'}"></div>
         </div>
         <div id='playInfo' data-bind="visible: playing();">
-            <div id='trackInfo'>Tell (Original Mix) | PROFF | Abandoned / Albina / Tell</div>
-            <div id='timeInfo'>5:15 / 7:59</div>
+            <div id='trackInfo'>
+                <span data-bind="text: playingTrack().Metadata.Title"></span> |
+                <span data-bind="text: playingTrack().Metadata.Artist"></span> |
+                <span data-bind="text: playingTrack().Metadata.Album"></span>
+            </div>
+            <div id='timeInfo'>
+                <span data-bind="text: playingProgressTime"></span> /
+                <span data-bind="text: calculateTrackTime(playingTrack().Metadata.Duration)"></span>
+            </div>
         </div>
     </div>
     <div id='listControls'>

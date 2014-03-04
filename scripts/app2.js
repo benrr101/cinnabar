@@ -86,9 +86,11 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
-    self.playing = ko.observable(false);        // Whether or not there are tracks playing
-    self.playingTrack = ko.observable();        // The playing track
-    self.playingAudioObject = null;             // The currently playing audio object
+    self.playing = ko.observable(false);                        // Whether or not there are tracks playing
+    self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
+    self.playingAudioObject = null;                             // The currently playing audio object
+    self.playingProgress = ko.observable(0)                     // The played percentage of the track
+    self.playingProgressTime = ko.observable(0)                 // The time played
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -227,12 +229,20 @@ function ViewModel() {
             self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
         } else {
             self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
+            self.playingAudioObject.ontimeupdate = function(e) {
+                var time = e.target.currentTime;
+                self.playingProgress(time / e.target.duration * 100);
+                self.playingProgressTime(calculateTrackTime(time));
+            }
         }
 
         // Set up the visuals for the playing audio
 
         // Start that shit up!
         self.playing(true);
+        self.playingTrack(track);
+        self.playingProgressTime(calculateTrackTime(0));
+        self.playingProgress(0);
         self.playingAudioObject.play();
     }
 }
