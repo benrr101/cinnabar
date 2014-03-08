@@ -93,9 +93,10 @@
         </div>
     </div>
     <div id='infoBar' style='height:48px; background-color:#0055d4;'>
-        <span>
-            3299 Tracks | 1 week 4 days 11 hours 44 minutes
-        </span>
+        <span data-bind="text: infoTotalTracks()"></span>
+        Tracks |
+        <span data-bind="text: infoTotalTime()"></span>
+        1 week 4 days 11 hours 44 minutes
         <input type='text' placeholder="Search Tracks"/>
     </div>
     <div id='trackPane'>

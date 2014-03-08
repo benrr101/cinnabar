@@ -9,6 +9,7 @@
 jQuery.support.cors = true;
 
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+var sessionStorageKey = "CoDUser";
 var serverAddress = "https://localhost:8080/";
 
 function getBaseAjaxParams(method, url) {
@@ -73,9 +74,9 @@ function ViewModel() {
     self.generalError = ko.observable(false);   // Used for storing general error messages that will be visible in a modal
 
     self.loginLoggedIn = ko.observable(false);  // Used for determining if the login form should be displayed. On launch, we are not logged in.
-    self.loginNotice   = ko.observable();       // Used for storing error messages that should be shown to the user.
-    self.loginPassword = ko.observable();       // Used for storing the password the user is logging in with.
-    self.loginUsername = ko.observable();       // Used for storing the username the user is logging in with.
+    self.loginNotice   = ko.observable(null);   // Used for storing error messages that should be shown to the user.
+    self.loginPassword = ko.observable(null);   // Used for storing the password the user is logging in with.
+    self.loginUsername = ko.observable(null);   // Used for storing the username the user is logging in with.
 
     self.trackLibrary = {};                     // Used for caching all tracks.
     self.autoPlaylists = {};                    // Used for caching all auto playlists
@@ -86,9 +87,14 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
+    self.nowPlayingList = [];
+
+    self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
+    self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
+
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
-    self.playingArt = ko.observable();                          // The Href for the currently playing album art
+    self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
     self.playingAudioObject = null;                             // The currently playing audio object
     self.playingProgress = ko.observable(0)                     // The played percentage of the track
     self.playingProgressTime = ko.observable(0)                 // The time played
@@ -103,12 +109,19 @@ function ViewModel() {
         params.success = function() { // Clear out any error messages, set the user as logged in, and start the library loading process
             self.loginNotice();
             self.loginLoggedIn(true);
+            self.loginPassword(false);
 
-            self.loadAutoPlaylists();
-            self.loadStaticPlaylists();
-            self.loadTrackLibrary(true);
+            sessionStorage.setItem(sessionStorageKey, self.loginUsername());
+
+            self.loadUserGeneralInfo(self.loginUsername());
         };
         $.ajax(params);
+    };
+
+    self.bootRequests = function() {
+        self.loadAutoPlaylists();
+        self.loadStaticPlaylists();
+        self.loadTrackLibrary(true);
     };
 
     self.loadAutoPlaylists = function() {
@@ -120,7 +133,7 @@ function ViewModel() {
             self.navAutoPlaylists(jqXHR);
         }
         $.ajax(params);
-    }
+    };
 
     self.loadStaticPlaylists = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
@@ -131,7 +144,7 @@ function ViewModel() {
             self.navStaticPlaylists(jqXHR);
         }
         $.ajax(params);
-    }
+    };
 
     self.loadPlaylist = function(type, playlist) {
         // Set up the parameters in case we need to look it up
@@ -164,7 +177,7 @@ function ViewModel() {
             }
         }
         $.ajax(params);
-    }
+    };
 
     self.loadTrackLibrary = function(setVisible) {
         var params = getBaseAjaxParams("GET", serverAddress + "tracks/");
@@ -177,6 +190,26 @@ function ViewModel() {
                 if(setVisible) { self.trackVisibleTracks.push(jqXHR[i]); }
             }
         };
+        $.ajax(params);
+    };
+
+    self.loadUserGeneralInfo = function(username) {
+        var params = getBaseAjaxParams("GET", serverAddress + "users/" + username);
+        params.error = function(jqXHR) {
+            if(jqXHR.status == 401) {       // Not authorized; not logged in.
+                self.loginNotice("Your session expired. Please confirm your credentials.");
+                self.loginLoggedIn(false);
+            } else if(jqXHR.status == 0) {  // Unknown error. Can't continue.
+                self.generalError("An unknown error occurred.");
+            } else {
+                self.generalError(jqXHR.responseJSON.Message);
+            }
+        };
+        params.success = function(jqXHR) {
+            self.infoTotalTracks(jqXHR.Count);
+            self.infoTotalTime(calculateTrackTime(jqXHR.TotalTime));
+            self.bootRequests();
+        }
         $.ajax(params);
     };
 
@@ -196,7 +229,7 @@ function ViewModel() {
         } else {
             self.playTrack(self.trackLibrary[track.Id]);
         }
-    }
+    };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
     self.playTrack = function(track) {
@@ -257,8 +290,25 @@ function ViewModel() {
         }
     }
 
-
 }
 
 // Activates knockout.js
-ko.applyBindings(new ViewModel());
+var vm = { viewModel: new ViewModel() };
+ko.applyBindings(vm.viewModel);
+
+// Run some initialization stuff on the app
+$(document).ready(function() {
+    // See if we have a username stored in the local storage.
+    // NOTE: We cannot just check to see if the cookie exists using DOM manipulation. Why? Because the cookie
+    // is secure, so it is inaccessible to javascript. We can get around that, though.
+    if(sessionStorage.getItem(sessionStorageKey) != null) {
+        // User might be logged in. We'll assume they are for now
+        // Attempt to load the general user statistics to test the session key
+        vm.viewModel.loginLoggedIn(true);
+        vm.viewModel.loadUserGeneralInfo(sessionStorage.getItem(sessionStorageKey));
+    } else {
+        // We have no idea who logged in. We need to show the login form.
+        vm.viewModel.loginLoggedIn(false);
+    }
+});
+
