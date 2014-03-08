@@ -66,6 +66,23 @@ function calculateTrackTime(time) {
     return (hours > 0 ? String(hours) + ":" : "") + minutes + ":" + seconds;
 }
 
+/**
+ * Shuffle algorithm
+ * @source  http://stackoverflow.com/a/10142256
+ * @returns Array   A shuffled array
+ */
+Array.prototype.shuffle = function() {
+    var i = this.length, j, temp;
+    if ( i == 0 ) return this;
+    while ( --i ) {
+        j = Math.floor( Math.random() * ( i + 1 ) );
+        temp = this[i];
+        this[i] = this[j];
+        this[j] = temp;
+    }
+    return this;
+}
+
 // VIEW MODEL //////////////////////////////////////////////////////////////
 function ViewModel() {
     var self = this;
@@ -87,7 +104,11 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
-    self.nowPlayingList = [];
+    self.shuffleEnabled = ko.observable(false);         // Used to show if the shuffled mode is enabled or not
+    self.repeatEnabled = ko.observable(false);          // Used to show if the repeat mode is enabled or not
+
+    self.nowPlayingList = [];                           // Storage for the now playing playlist
+    self.nowPlayingIndex = 0;                           // Index into the nowPlayingList of the currently playing track
 
     self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
@@ -232,6 +253,74 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
+    self.manualPlay = function(track) {
+        // Build the now playing list from the existing playlist
+        self.nowPlayingList = [];
+        for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
+            self.nowPlayingList.push(self.trackVisibleTracks()[i]);
+        }
+
+        // Do we need to shuffle the playlist?
+        if(self.shuffleEnabled()) {
+            // Shuffle an re-add the original track to the top of the list
+            self.nowPlayingList = self.nowPlayingList.shuffle();
+            self.nowPlayingList.unshift(track);
+            self.nowPlayingIndex = 0;
+        } else {
+            self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
+        }
+
+        // Fetch/play the first track
+        self.fetchAndPlayTrack(track);
+    }
+
+    self.nextTrack = function() {
+        // @TODO: Do queue checking
+        // Are we at the end of the now playing
+        self.nowPlayingIndex++;
+        if(self.nowPlayingIndex >= self.nowPlayingList.length) {
+            // At the end of the list, do we repeat?
+            if(self.repeatEnabled()) {
+                // Loop back to the beginning
+                self.nowPlayingIndex = 0;
+            } else {
+                // Nope. We're done.
+                self.playingAudioObject.pause();
+                self.playing(false);
+                return;
+            }
+        }
+
+        // Load the next track
+        self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
+    }
+
+    self.previousTrack = function() {
+        // Are we past 2% of the track?
+        if(self.playingAudioObject.currentTime / self.playingAudioObject.duration * 100 >= 2 ) {
+            // Reset the current time to 0
+            self.playingAudioObject.currentTime = 0;
+        } else {
+            // Are we at the beginning of the now playing list
+            self.nowPlayingIndex--;
+            if(self.nowPlayingIndex < 0) {
+                // At the beginning of the now playing list. Do we loop around?
+                if(self.repeatEnabled()) {
+                    // Loop back to the end of the list
+                    self.nowPlayingIndex = self.nowPlayingList.length - 1;
+                } else {
+                    // Nope we're done.
+                    self.playingAudioObject.pause();
+                    self.playing(false);
+                    return;
+                }
+            }
+
+            // Load the previous track
+            self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
+        }
+    }
+
     self.playTrack = function(track) {
         //@TODO: Determine what quality to play
         // Create an audio thing if needed
