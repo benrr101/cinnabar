@@ -135,6 +135,7 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 #scrubber {width:100%; height: 5px; margin-top: 32px; background-color:#dcdcdc;}
 #played {float: left; height: 5px; background-color: #0055d4;}
 #playedHandle { float: left; margin-top:-7px; margin-left:-6px; width:10px; height:21px; background-color: #0055d4; }
+#playedHandle.end {margin-left:-10px;}
 #playedHandle.ui-draggable-dragging { margin-top:-10px; background-color: transparent; border: 2px solid #0055d4; }
 #playInfo {font-size:0.750em; margin-top:20px; }
 #trackInfo { float: left; }

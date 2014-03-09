@@ -356,12 +356,21 @@ function ViewModel() {
 
                 // Update the scrubber percentage
                 if(self.playingScrubberEnabled) {
-                    self.playingProgress(time / e.target.duration * 100);
+                    var percent = time / e.target.duration * 100;
+                    self.playingProgress(percent);
+                    if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
+                        $("#playedHandle").addClass("end");
+                    }
                 }
+            }
+            self.playingAudioObject.onended = function(e) {
+                // Jump to the next track
+                self.nextTrack();
             }
         }
 
         // Start that shit up!
+        $("#playedHandle").removeClass("end");
         self.playing("playing");
         self.playingArt(serverAddress + track.ArtHref);
         self.playingTrack(track);
@@ -428,6 +437,17 @@ function ViewModel() {
     self.toggleRepeat = function() {
         self.repeatEnabled(!self.repeatEnabled());
     }
+
+    self.scrubberClick = function(vmodel, event) {
+        // Get x offset of the click
+        var x = event.pageX - $(event.target).offset().left;
+
+        // Calculate and set the new time for the audio playback
+        var trackDuration = vm.viewModel.playingAudioObject.duration;
+        var length = parseInt($(event.target).css("width").replace("px", ""));
+        var newTime = trackDuration * x / length;
+        vm.viewModel.playingAudioObject.currentTime = newTime;
+    }
 }
 
 // Activates knockout.js
@@ -472,18 +492,6 @@ $(document).ready(function() {
             // Move the handle back to where it belongs
             $("#playedHandle").css("top", "").css("left", "");
         }
-    });
-
-    // Make the scrubber clickable
-    $("#scrubber").click(function(event, ui) {
-        // Get x offset of the click
-        var x = event.pageX - $(this).offset().left;
-
-        // Calculate and set the new time for the audio playback
-        var trackDuration = vm.viewModel.playingAudioObject.duration;
-        var length = parseInt($(this).css("width").replace("px", ""));
-        var newTime = trackDuration * x / length;
-        vm.viewModel.playingAudioObject.currentTime = newTime;
     });
 });
 

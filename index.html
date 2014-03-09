@@ -41,11 +41,11 @@
         </div>
     </div>
     <div id='playSlider'>
-        <div id='scrubber' data-bind="visible: playing();">
+        <div id='scrubber' data-bind="visible: playing(), click: scrubberClick">
             <div id='played' data-bind="style:{width: playingProgress() + '%'}"></div>
             <div id='playedHandle'></div>
         </div>
-        <div id='playInfo' data-bind="visible: playing();">
+        <div id='playInfo' data-bind="visible: playing()">
             <div id='trackInfo'>
                 <span data-bind="text: playingTrack().Metadata.Title"></span> |
                 <span data-bind="text: playingTrack().Metadata.Artist"></span> |
@@ -66,7 +66,6 @@
             <img src='img/repeat_selected.png' alt='repeat' title='Repeat On/Off' data-bind="visible: repeatEnabled()"/>
             <img src='img/repeat.png' alt='repeat' title='Repeat On/Off' data-bind="visible: !repeatEnabled()"/>
         </div>
-
     </div>
     <div id='settings'>
         <div class='button small'><img src='img/volume.png' alt='volume' title='Volume' /></div>
@@ -97,7 +96,7 @@
                 </li>
             </ul>
         </div>
-        <div id='albumArt' data-bind="visible: playing() != false">
+        <div id='albumArt' data-bind="visible: playing() != false && playingTrack().ArtHref != null">
             <img data-bind="attr:{src: playingTrack().ArtHref != null ? playingArt() : ''}" />
         </div>
     </div>
