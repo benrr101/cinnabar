@@ -138,6 +138,7 @@ function ViewModel() {
     self.playingAudioObject = null;                             // The currently playing audio object
     self.playingProgress = ko.observable(0)                     // The played percentage of the track
     self.playingProgressTime = ko.observable(0)                 // The time played
+    self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -349,9 +350,14 @@ function ViewModel() {
         } else {
             self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
             self.playingAudioObject.ontimeupdate = function(e) {
+                // Update the numeric time
                 var time = e.target.currentTime;
-                self.playingProgress(time / e.target.duration * 100);
                 self.playingProgressTime(calculateTrackTime(time));
+
+                // Update the scrubber percentage
+                if(self.playingScrubberEnabled) {
+                    self.playingProgress(time / e.target.duration * 100);
+                }
             }
         }
 
@@ -442,5 +448,32 @@ $(document).ready(function() {
         // We have no idea who logged in. We need to show the login form.
         vm.viewModel.loginLoggedIn(false);
     }
+
+    // Make the scrubber draggable
+    $("#playedHandle").draggable({
+        axis: "x",
+        containment: "parent",
+        start: function() {
+            // Disable the scrubber updating
+            vm.viewModel.playingScrubberEnabled = false;
+        },
+        stop: function(event, ui) {
+            // Calculate the offset into the track to set
+            var trackDuration = vm.viewModel.playingAudioObject.duration;
+            var length = parseInt($("#scrubber").css("width").replace("px",""));
+            var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
+            console.log(newTime);
+
+            // Set the current time on the audio object
+            vm.viewModel.playingAudioObject.currentTime = newTime;
+            console.log(vm.viewModel.playingAudioObject.currentTime);
+
+            // Start the scrubber up again
+            vm.viewModel.playingScrubberEnabled = true;
+
+            // Move the handle back to where it belongs
+            $("#playedHandle").css("top", "").css("left", "");
+        }
+    });
 });
 
