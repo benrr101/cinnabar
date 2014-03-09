@@ -83,6 +83,24 @@ Array.prototype.shuffle = function() {
     return this;
 }
 
+/**
+ * Array movement algorithm
+ * @source  http://stackoverflow.com/a/5306832
+ * @param old_index int The original index of the element to move
+ * @param new_index int The new index of the element to move
+ * @returns Array   The original array with the element moved
+ */
+Array.prototype.move = function (old_index, new_index) {
+    if (new_index >= this.length) {
+        var k = new_index - this.length;
+        while ((k--) + 1) {
+            this.push(undefined);
+        }
+    }
+    this.splice(new_index, 0, this.splice(old_index, 1)[0]);
+    return this;
+};
+
 // VIEW MODEL //////////////////////////////////////////////////////////////
 function ViewModel() {
     var self = this;
@@ -108,6 +126,7 @@ function ViewModel() {
     self.repeatEnabled = ko.observable(false);          // Used to show if the repeat mode is enabled or not
 
     self.nowPlayingList = [];                           // Storage for the now playing playlist
+    self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
     self.nowPlayingIndex = 0;                           // Index into the nowPlayingList of the currently playing track
 
     self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
@@ -258,13 +277,14 @@ function ViewModel() {
         self.nowPlayingList = [];
         for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
             self.nowPlayingList.push(self.trackVisibleTracks()[i]);
+            self.nowPlayingListSorted.push(self.trackVisibleTracks()[i]);
         }
 
         // Do we need to shuffle the playlist?
         if(self.shuffleEnabled()) {
             // Shuffle an re-add the original track to the top of the list
             self.nowPlayingList = self.nowPlayingList.shuffle();
-            self.nowPlayingList.unshift(track);
+            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
             self.nowPlayingIndex = 0;
         } else {
             self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
@@ -379,6 +399,29 @@ function ViewModel() {
         }
     }
 
+    self.toggleShuffle = function() {
+        if(self.shuffleEnabled()) {
+            // Turn off shuffling
+            self.shuffleEnabled(false);
+
+            // Copy the sorted list back into the now playing list
+            self.nowPlayingList = [];
+            for(var i = 0; i < self.nowPlayingListSorted.length; ++i) {
+                self.nowPlayingList.push(self.nowPlayingListSorted[i]);
+            }
+            self.nowPlayingIndex = self.nowPlayingList.indexOf(self.playingTrack());
+        } else {
+            // Turn on shuffling
+            self.shuffleEnabled(true);
+            self.nowPlayingList = self.nowPlayingList.shuffle();
+            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(self.playingTrack()), 0);
+            self.nowPlayingIndex = 0;
+        }
+    }
+
+    self.toggleRepeat = function() {
+        self.repeatEnabled(!self.repeatEnabled());
+    }
 }
 
 // Activates knockout.js

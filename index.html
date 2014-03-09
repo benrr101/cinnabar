@@ -56,8 +56,15 @@
         </div>
     </div>
     <div id='listControls'>
-        <div class='button small'><img src='img/shuffle.png' alt='shuffle' title='Shuffle On/Off' /></div>
-        <div class='button small'><img src='img/repeat_selected.png' alt='repeat' title='Repeat On/Off' /></div>
+        <div class='button small' data-bind="click: toggleShuffle">
+            <img src='img/shuffle_selected.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: shuffleEnabled()"/>
+            <img src='img/shuffle.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: !shuffleEnabled()" />
+        </div>
+        <div class='button small' data-bind="click: toggleRepeat">
+            <img src='img/repeat_selected.png' alt='repeat' title='Repeat On/Off' data-bind="visible: repeatEnabled()"/>
+            <img src='img/repeat.png' alt='repeat' title='Repeat On/Off' data-bind="visible: !repeatEnabled()"/>
+        </div>
+
     </div>
     <div id='settings'>
         <div class='button small'><img src='img/volume.png' alt='volume' title='Volume' /></div>
