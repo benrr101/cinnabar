@@ -133,6 +133,7 @@ function ViewModel() {
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
+    self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
     self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
     self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
     self.playingAudioObject = null;                             // The currently playing audio object
@@ -291,6 +292,9 @@ function ViewModel() {
             self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
         }
 
+        // Set the playing pane
+        self.playingPane(self.visiblePane());
+
         // Fetch/play the first track
         self.fetchAndPlayTrack(track);
     }
@@ -318,6 +322,7 @@ function ViewModel() {
                 // Nope. We're done.
                 self.playingAudioObject.pause();
                 self.playing(false);
+                self.playingTrack({Metadata:{}});
                 return;
             }
         }

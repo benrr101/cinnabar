@@ -126,6 +126,8 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 
 #trackPane {float: left; width: calc(100% - 295px); font-size:0.8em;}
 #trackPane table { width: 100%; border-collapse: collapse; margin:10px;}
+#trackPane tbody tr {  }
+.playIndicator { width: 25px; vertical-align: sub; line-height: 0.8em; }
 
 #playControls { height:100px; width:185px; margin-left:15px;}
 #playControls > div {float:left;}
@@ -140,3 +142,4 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 #playInfo {font-size:0.750em; margin-top:20px; }
 #trackInfo { float: left; }
 #timeInfo { float: right; }
+
