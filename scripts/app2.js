@@ -462,11 +462,9 @@ $(document).ready(function() {
             var trackDuration = vm.viewModel.playingAudioObject.duration;
             var length = parseInt($("#scrubber").css("width").replace("px",""));
             var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
-            console.log(newTime);
 
             // Set the current time on the audio object
             vm.viewModel.playingAudioObject.currentTime = newTime;
-            console.log(vm.viewModel.playingAudioObject.currentTime);
 
             // Start the scrubber up again
             vm.viewModel.playingScrubberEnabled = true;
@@ -474,6 +472,18 @@ $(document).ready(function() {
             // Move the handle back to where it belongs
             $("#playedHandle").css("top", "").css("left", "");
         }
+    });
+
+    // Make the scrubber clickable
+    $("#scrubber").click(function(event, ui) {
+        // Get x offset of the click
+        var x = event.pageX - $(this).offset().left;
+
+        // Calculate and set the new time for the audio playback
+        var trackDuration = vm.viewModel.playingAudioObject.duration;
+        var length = parseInt($(this).css("width").replace("px", ""));
+        var newTime = trackDuration * x / length;
+        vm.viewModel.playingAudioObject.currentTime = newTime;
     });
 });
 
