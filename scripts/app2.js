@@ -66,6 +66,25 @@ function calculateTrackTime(time) {
     return (hours > 0 ? String(hours) + ":" : "") + minutes + ":" + seconds;
 }
 
+function calculateTimeVerbal(time) {
+    time = parseInt(time);
+
+    // Use a divide and mod method to get days, hours, minutes, seconds for the track
+    var days = Math.floor(time / 86400);
+    time %= 86400;
+    var hours = Math.floor(time / 3600);
+    time %= 3600;
+    var minutes = Math.floor(time / 60);
+    var seconds = time % 60;
+
+    // Format for text
+    days = days > 0 ? days + " days " : "";
+    hours = hours > 0 ? hours + " hours ": "";
+    minutes = minutes > 0 ? minutes + " minutes " : "";
+
+    return days + hours + minutes + seconds + " seconds";
+}
+
 /**
  * Shuffle algorithm
  * @source  http://stackoverflow.com/a/10142256
@@ -249,7 +268,7 @@ function ViewModel() {
         };
         params.success = function(jqXHR) {
             self.infoTotalTracks(jqXHR.Count);
-            self.infoTotalTime(calculateTrackTime(jqXHR.TotalTime));
+            self.infoTotalTime(calculateTimeVerbal(jqXHR.TotalTime));
             self.bootRequests();
         }
         $.ajax(params);
@@ -274,7 +293,7 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.manualPlay = function(track) {
+    self.manualPlay = function(track, event) {
         // Build the now playing list from the existing playlist
         self.nowPlayingList = [];
         for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
@@ -466,6 +485,22 @@ function ViewModel() {
         var length = parseInt($(event.target).css("width").replace("px", ""));
         var newTime = trackDuration * x / length;
         vm.viewModel.playingAudioObject.currentTime = newTime;
+    }
+
+    self.trackHover = function(action, model, event) {
+        // Make the hover indicator visible or invisible. The while loop advances up the tree until hits the top of the
+        // or the hovered row is found
+        var $target = $(event.target);
+        while($target.prop("tagName").toLowerCase() != "tr" || $target.length == 0) {
+            $target = $target.parent();
+        }
+
+        // Only show the hover indicator if the playing indicator isn't playing
+        var $playingIndicator = $target.find(".playIndicatorPlaying:visible");
+        var $hoverIndicator = $target.find(".playIndicatorHover");
+        if($playingIndicator.length == 0) {
+            $hoverIndicator.css("display", action == 'start' ? "inline" : "");
+        }
     }
 }
 

@@ -115,19 +115,20 @@ div.button:hover:before { background-color: rgba(220, 220, 220, 0.10); }
 #albumArt img { height: 275px; width: 275px; margin-left: auto; margin-right: auto;}
 
 #infoBar { float:left; width: calc(100% - 315px); padding-left:20px; padding-right:20px; }
-#infoBar span { display: inline-block; margin-top: 10px; margin-bottom:10px; font-size: 1.375em;}
+#infoBar > span { display: inline-block; margin-top: 10px; margin-bottom:10px; font-size: 1.375em;}
 #infoBar input { float:right; width:300px; margin-top:5px; margin-bottom:5px; padding-right:40px; font-size:0.875em; background: #dcdcdc url('../img/search.png') no-repeat right 10px top 10px; }
 
 #logo { margin-left:15px; margin-top: 15px; }
 
 #topBar > div { float:left;}
-#topBar .button.small { margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0; }
+#topBar .button.small { height: 32px; width: 32px; margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0; }
 #topBar .button.large { margin-top:10px; padding:10px; line-height:0;}
 
 #trackPane {float: left; width: calc(100% - 295px); font-size:0.8em;}
-#trackPane table { width: 100%; border-collapse: collapse; margin:10px;}
-#trackPane tbody tr {  }
-.playIndicator { width: 25px; vertical-align: sub; line-height: 0.8em; }
+#trackPane table { width: 100%; border-collapse: collapse; margin:10px; -webkit-user-select: none; -moz-user-select: none; -khtml-user-select: none; -ms-user-select: none; }
+#trackPane tbody tr:hover { cursor: pointer; background-color: #0055d4; }
+.playIndicator { width: 25px; padding-left: 5px; vertical-align: sub; line-height: 0.8em; }
+.playIndicatorHover { display: none; }
 
 #playControls { height:100px; width:185px; margin-left:15px;}
 #playControls > div {float:left;}

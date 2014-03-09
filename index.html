@@ -30,14 +30,14 @@
     </div>
     <div id='playControls'>
         <div class='button small' data-bind="click: previousTrack">
-            <img src='img/back.png' alt='back' title='Previous Track' />
+            <img src='img/back.png' alt='back' title='Previous Track' data-bind="visible: playing()" />
         </div>
         <div class='button large' data-bind="click: togglePlayback">
             <img src='img/pause.png' alt='pause' title='Play/Pause' data-bind="visible: playing() == 'playing'" />
             <img src='img/play.png' alt='play' title='Play/Pause' data-bind="visible: playing() == 'paused' || !playing()"/>
         </div>
         <div class='button small' data-bind="click: nextTrack">
-            <img src='img/forward.png' alt='forward' title='Next Track' />
+            <img src='img/forward.png' alt='forward' title='Next Track' data-bind="visible: playing()" />
         </div>
     </div>
     <div id='playSlider'>
@@ -101,10 +101,11 @@
         </div>
     </div>
     <div id='infoBar' style='height:48px; background-color:#0055d4;'>
-        <span data-bind="text: infoTotalTracks()"></span>
-        Tracks |
-        <span data-bind="text: infoTotalTime()"></span>
-        1 week 4 days 11 hours 44 minutes
+        <span>
+            <span data-bind="text: infoTotalTracks()"></span>
+            Tracks |
+            <span data-bind="text: infoTotalTime()"></span>
+        </span>
         <input type='text' placeholder="Search Tracks"/>
     </div>
     <div id='trackPane'>
@@ -121,9 +122,14 @@
                 </tr>
             </thead>
             <tbody data-bind="foreach: trackVisibleTracks()">
-                <tr>
+                <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'), mouseout: $root.trackHover.bind($data, 'end'), dblclick: $root.manualPlay}, dblclickBubble: false">
                     <td class='playIndicator'>
-                        <span data-bind="click: $root.manualPlay, visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id"><img src='img/play_small.png' alt='Play' title='Play'/></span>
+                        <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay, visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
+                            <img src='img/play_small.png' alt='Play' title='Play'/>
+                        </span>
+                        <span class='playIndicatorHover' data-bind="click: $root.manualPlay, visible: $root.playingTrack().Id != Id">
+                            <img src='img/play_small.png' alt='Play' title='Play' />
+                        </span>
                     </td>
                     <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
                     <td data-bind="text: Metadata.Title"></td>
