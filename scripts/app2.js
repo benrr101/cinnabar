@@ -295,6 +295,16 @@ function ViewModel() {
         self.fetchAndPlayTrack(track);
     }
 
+    self.startPlayback = function() {
+        if(self.shuffleEnabled()) {
+            // Grab a random track and manually play it
+            var randomIndex = Math.floor(Math.random() * (self.trackVisibleTracks().length-1));
+            self.manualPlay(self.trackVisibleTracks()[randomIndex]);
+        } else {
+            self.manualPlay(self.trackVisibleTracks()[0]);
+        }
+    }
+
     self.nextTrack = function() {
         // @TODO: Do queue checking
         // Are we at the end of the now playing
@@ -405,12 +415,16 @@ function ViewModel() {
 
     self.togglePlayback = function() {
         // @TODO: If the audio object doesn't exist, grab the beginning of the playlist
-        if(self.playingAudioObject.paused) {
-            self.playingAudioObject.play();
-            self.playing("playing");
+        if(self.playing() === false) {
+            self.startPlayback();
         } else {
-            self.playingAudioObject.pause();
-            self.playing("paused");
+            if(self.playingAudioObject.paused) {
+                self.playingAudioObject.play();
+                self.playing("playing");
+            } else {
+                self.playingAudioObject.pause();
+                self.playing("paused");
+            }
         }
     }
 
