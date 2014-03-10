@@ -150,6 +150,7 @@ function ViewModel() {
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
+    self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
     self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
     self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
@@ -381,6 +382,7 @@ function ViewModel() {
             self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
         } else {
             self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
+            self.playingAudioObject.volume = self.playingVolume;
             self.playingAudioObject.ontimeupdate = function(e) {
                 // Update the numeric time
                 var time = e.target.currentTime;
@@ -551,8 +553,26 @@ $(document).ready(function() {
     $("#volumeHandle").draggable({
         axis: "y",
         containment: "parent",
+        start: function(event, ui) {
+            $(this).parent().parent().addClass("locked");
+        },
+        drag: function(event, ui) {
+            // Calculate the volume
+            var height = parseInt($("#volumeSlider").css("height").replace("px", ""));
+            var newVol = (height - ui.position.top) / height;
+            //newVol = newVol * 100 < 1 ? newVol = 0 : newVol;
 
+            // If there's a playing audio thingy, change the volume
+            if(vm.viewModel.playingAudioObject != null) {
+                vm.viewModel.playingAudioObject.volume = newVol;
+            }
 
+            // Set the volume in the state anyhow if it's not playing
+            vm.viewModel.playingVolume = newVol;
+        },
+        stop: function(){
+            $(this).parent().parent().removeClass("locked");
+        }
     });
 });
 
