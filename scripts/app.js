@@ -477,10 +477,11 @@ function ViewModel() {
     self.scrubberClick = function(vmodel, event) {
         // Get x offset of the click
         var x = event.pageX - $(event.target).offset().left;
+        var $scrubber = $(event.target).attr('id') == 'scrubber' ? $(event.target) : $(event.target).parent();
 
         // Calculate and set the new time for the audio playback
         var trackDuration = vm.viewModel.playingAudioObject.duration;
-        var length = parseInt($(event.target).css("width").replace("px", ""));
+        var length = parseInt($scrubber.css("width").replace("px", ""));
         var newTime = trackDuration * x / length;
         vm.viewModel.playingAudioObject.currentTime = newTime;
     }
@@ -544,6 +545,14 @@ $(document).ready(function() {
             // Move the handle back to where it belongs
             $("#playedHandle").css("top", "").css("left", "");
         }
+    });
+
+    // Make the volume handle draggable
+    $("#volumeHandle").draggable({
+        axis: "y",
+        containment: "parent",
+
+
     });
 });
 
