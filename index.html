@@ -168,6 +168,7 @@
                     <th>Artist</th>
                     <th>Album</th>
                     <th>Year</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody data-bind="foreach: trackVisibleTracks()">
@@ -186,6 +187,7 @@
                     <td data-bind="text: Metadata.Artist"></td>
                     <td data-bind="text: Metadata.Album"></td>
                     <td data-bind="text: Metadata.Year"></td>
+                    <td data-bind="click: $root.enqueueTrack">EQ</td>
                 </tr>
             </tbody>
         </table>

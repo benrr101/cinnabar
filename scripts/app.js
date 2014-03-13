@@ -165,6 +165,7 @@ function ViewModel() {
     self.playingAudioObject = null;                             // The currently playing audio object
     self.playingProgress = ko.observable(0)                     // The played percentage of the track
     self.playingProgressTime = ko.observable(0)                 // The time played
+    self.playingQueue = [];                                     // The queue of tracks to be played immediately after the current track
     self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
     // ACTIONS /////////////////////////////////////////////////////////////
@@ -342,7 +343,12 @@ function ViewModel() {
     }
 
     self.nextTrack = function() {
-        // @TODO: Do queue checking
+        // If there's a track in the queue that needs to be played, play it nao!
+        if(self.playingQueue.length > 0) {
+            self.fetchAndPlayTrack(self.playingQueue.shift());
+            return;
+        }
+
         // If we're on random shuffle, just pick another track and keep going
         if(self.shuffleEnabled() && self.settings().shuffleMode == 'random') {
             self.nowPlayingIndex = Math.floor(Math.random() * (self.nowPlayingList.length-1));
@@ -438,6 +444,10 @@ function ViewModel() {
         self.playingProgressTime(calculateTrackTime(0));
         self.playingProgress(0);
         self.playingAudioObject.play();
+    }
+
+    self.enqueueTrack = function(track) {
+        self.playingQueue.push(track);
     }
 
     self.showPlaylist = function(type, playlist) {
