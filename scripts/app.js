@@ -88,6 +88,11 @@ function calculateTimeVerbal(time) {
     return days + hours + minutes + seconds + " seconds";
 }
 
+var sortPlaylistsByName = function (left, right) {
+    var l = left.Name.toLowerCase(), r = right.Name.toLowerCase();
+    return l == r ? 0 : l < r ? -1 : 1;
+}
+
 /**
  * Shuffle algorithm
  * @source  http://stackoverflow.com/a/10142256
@@ -138,9 +143,9 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
-    self.trackLibrary = {};                     // Used for caching all tracks.
-    self.autoPlaylists = {};                    // Used for caching all auto playlists
-    self.staticPlaylists = {};                  // Used for caching all static playlists
+    self.trackLibrary = [];                     // Used for caching all tracks.
+    self.autoPlaylists = [];                    // Used for caching all auto playlists
+    self.staticPlaylists = [];                  // Used for caching all static playlists
 
     self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
     self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
@@ -167,6 +172,9 @@ function ViewModel() {
     self.playingProgressTime = ko.observable(0)                 // The time played
     self.playingQueue = [];                                     // The queue of tracks to be played immediately after the current track
     self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
+
+    self.playlistAddModalVisible = ko.observable(false)         // Whether or not the add playlist modal is visible
+    self.playlistAddName = ko.observable(null)                  // The name for the new playlist
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -304,6 +312,35 @@ function ViewModel() {
         } else {
             self.playTrack(self.trackLibrary[track.Id]);
         }
+    };
+
+    self.submitStaticPlaylist = function() {
+        // Close the playlist modal
+        self.playlistAddModalVisible(false);
+
+        // Send an ajax request to add the static playlist
+        var params = getBaseAjaxParams("POST", serverAddress + "playlists/static/");
+        params.data = JSON.stringify({Name: self.playlistAddName()});
+        params.error = function(jqXHR) {
+            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
+        }
+        params.success = function(response) {
+            // Add the playlist to the list of playlists
+            var newPlaylist = {
+                Href: "playlists/static/" + response.Guid,
+                Name: self.playlistAddName(),
+                Id: response.Guid
+            };
+            self.navStaticPlaylists.push(newPlaylist);
+
+            // Sort it real quick
+            self.navStaticPlaylists.sort(sortPlaylistsByName);
+
+            // Clear out the modal stuff
+            self.playlistAddName(null);
+        };
+
+        $.ajax(params);
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
@@ -550,6 +587,10 @@ function ViewModel() {
 
         localStorage.setItem(settingsStorageKey, JSON.stringify(self.settings()));
         // @TODO: Write these to the server
+    }
+
+    self.showAddStaticPlaylist = function() {
+        self.playlistAddModalVisible('static');
     }
 }
 

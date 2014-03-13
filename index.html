@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError()">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || playlistAddModalVisible()">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -20,6 +20,14 @@
             <label for='loginPassword'>Password:</label>
             <input type='password' data-bind="value: loginPassword" id='loginPassword' />
             <button data-bind="click: loginSubmitLogin">Login</button>
+        </form>
+    </div>
+    <div id='addPlaylistModal' class='modal' data-bind="visible: playlistAddModalVisible() == 'static'">
+        <form>
+            <h1>Add Playlist</h1>
+            <label for='playlistName'>Playlist Name:</label>
+            <input type='text' id='playlistName' data-bind="value: playlistAddName">
+            <button data-bind="click: submitStaticPlaylist">Add Playlist</button>
         </form>
     </div>
     <div id='settingsModal' class='modal' data-bind="visible: settingsVisible()">
@@ -131,14 +139,16 @@
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'genres'}">Genres</li>
                 <li>
                     Auto Playlists
-                    <button class='addButton' title='Add Auto Playlist'><img src='img/plus.png' alt='+' /></button>
+                    <button class='addButton' title='Add Auto Playlist'>
+                        <img src='img/plus.png' alt='+' />
+                    </button>
                     <ul data-bind="foreach: navAutoPlaylists()">
                         <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto'), css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
                     </ul>
                 </li>
                 <li>
                     Playlists
-                    <button class='addButton' title='Add Playlist'><img src='img/plus.png' alt='+' /></button>
+                    <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist"><img src='img/plus.png' alt='+' /></button>
                     <ul data-bind="foreach: navStaticPlaylists()">
                         <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static'), css:{selected: $root.visiblePane() == 'static' + Id}"></li>
                     </ul>
