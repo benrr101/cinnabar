@@ -1,0 +1,33 @@
+@font-face {
+    font-family: 'SSBold';
+    src:/*url('source_sans/SourceSansPro-Bold.otf') format('opentype'),*/
+        url('source_sans/sourcesanspro-bold-webfont.ttf') format('truetype'),
+        url('source_sans/sourcesanspro-bold-webfont.woff') format('woff'),
+        url('source_sans/sourcesanspro-bold-webfont.svg') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'SS';
+    src:/*url('source_sans/SourceSansPro-Regular.otf') format('opentype'),*/
+        url('source_sans/sourcesanspro-regular-webfont.ttf') format('truetype'),
+        url('source_sans/sourcesanspro-regular-webfont.woff') format('woff'),
+        url('source_sans/sourcesanspro-regular-webfont.svg') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'SSLight';
+    src:/*url('source_sans/SourceSansPro-Light.otf') format('opentype'),*/
+        url('source_sans/sourcesanspro-light-webfont.ttf') format('truetype'),
+        url('source_sans/sourcesanspro-light-webfont.woff') format('woff'),
+        url('source_sans/sourcesanspro-light-webfont.svg') format('svg');
+    font-weight: 200;
+    font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+    @font-face { font-family: 'SSBold'; src:url('source_sans/sourcesanspro-bold-webfont.svg') format('svg'); }
+    @font-face { font-family: 'SS'; src:url('source_sans/sourcesanspro-regular-webfont.svg') format('svg'); }
+    @font-face { font-family: 'SSLight'; src:url('source_sans/sourcesanspro-light-webfont.svg') format('svg'); }
+}

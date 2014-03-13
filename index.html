@@ -5,12 +5,13 @@
     <script src='scripts/jquery-2.1.0.min.js' type='text/javascript'></script>
     <script src='scripts/jquery-ui-1.10.4.custom.min.js' type='text/javascript'></script>
     <script src='scripts/knockout-3.0.0.js' type='text/javascript'></script>
+    <link href='style/source_sans.css' rel='stylesheet' type='text/css' />
     <link href="style/style.css" rel="stylesheet" type='text/css'/>
 </head>
 <body>
 
-<div id='modals' data-bind="visible: loginLoggedIn() == false">
-    <div id='loginForm' class="centerH centerV" data-bind="visible: loginLoggedIn() == false">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError()">
+    <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
             <p data-bind="text:loginNotice(), visible:loginNotice() != ''"></p>
@@ -21,7 +22,44 @@
             <button data-bind="click: loginSubmitLogin">Login</button>
         </form>
     </div>
-    <div id='genError' class="centerH centerV" data-bind="text: generalError(), visible: generalError() != false"></div>
+    <div id='settingsModal' class='modal' data-bind="visible: settingsVisible()">
+        <form>
+            <h1>Settings</h1>
+            <div class='row'>
+                <div class='colLeft'>Shuffle Mode:</div>
+                <div class='colRight'>
+                    <input type='radio' value='order' id='shuffleModeOrder' name='shuffleMode' data-bind="checked: settings().shuffleMode" />
+                    <label for='shuffleModeOrder'>Random Order</label><br />
+                    <input type='radio' value='random' id='shuffleModeRandom' name='shuffleMode' data-bind="checked: settings().shuffleMode" />
+                    <label for='shuffleModeRandom'>True Random</label>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='colLeft'>
+                    Preferred Quality:
+                </div>
+                <div class='colRight'>
+                    <input type='radio' value='4' name='quality' id='qualityHigh' data-bind="checked: settings().quality" />
+                    <label for='qualityHigh'>High Quality (320kbps)</label><br />
+                    <input type='radio' value='2' name='quality' id='qualityMed' data-bind="checked: settings().quality" />
+                    <label for='qualityMed'>Medium Quality (192kbps)</label><br />
+                    <input type='radio' value='0' name='quality' id='qualityLow' data-bind="checked: settings().quality" />
+                    <label for='qualityLow'>Low Quality (128kbps)</label>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='colLeft'>Last.fm Integration:</div>
+                <div class='colRight'><span>Coming Soon</span></div>
+            </div>
+            <div>
+                <button type='button' data-bind="click: saveSettings">Save Settings</button>
+            </div>
+        </form>
+    </div>
+    <div id='genError' class="modal" data-bind="visible: generalError() != false">
+        <h1>An Error Occurred</h1>
+        <p data-bind="text: generalError()"></p>
+    </div>
 </div>
 
 <div id='topBar'>
@@ -78,7 +116,9 @@
                 </div>
             </div>
         </div>
-        <div class='button small'><img src='img/options.png' alt='settings' title='Settings' /></div>
+        <div class='button small' data-bind="click: showSettings">
+            <img src='img/options.png' alt='settings' title='Settings' />
+        </div>
     </div>
 </div>
 <div id='mainPane'>

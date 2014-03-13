@@ -7,8 +7,13 @@
 jQuery.support.cors = true;
 
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
-var sessionStorageKey = "CoDUser";
+var usernameStorageKey = "CoDUsername";
+var settingsStorageKey = "CoDSettings";
 var serverAddress = "https://localhost:8080/";
+var defaultSettings = {
+    quality: "4",
+    shuffleMode: "order"
+}
 
 function getBaseAjaxParams(method, url) {
     var newAjaxParams = {
@@ -130,6 +135,9 @@ function ViewModel() {
     self.loginPassword = ko.observable(null);   // Used for storing the password the user is logging in with.
     self.loginUsername = ko.observable(null);   // Used for storing the username the user is logging in with.
 
+    self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
+    self.settings = ko.observable(defaultSettings); // The settings object for the session
+
     self.trackLibrary = {};                     // Used for caching all tracks.
     self.autoPlaylists = {};                    // Used for caching all auto playlists
     self.staticPlaylists = {};                  // Used for caching all static playlists
@@ -171,7 +179,7 @@ function ViewModel() {
             self.loginLoggedIn(true);
             self.loginPassword(false);
 
-            sessionStorage.setItem(sessionStorageKey, self.loginUsername());
+            sessionStorage.setItem(usernameStorageKey, self.loginUsername());
 
             self.loadUserGeneralInfo(self.loginUsername());
         };
@@ -179,9 +187,15 @@ function ViewModel() {
     };
 
     self.bootRequests = function() {
+        // Ajax requests
         self.loadAutoPlaylists();
         self.loadStaticPlaylists();
         self.loadTrackLibrary(true);
+
+        // Session storage lookups
+        if(localStorage.getItem(settingsStorageKey) != null) {
+            self.settings(localStorage.getItem(settingsStorageKey));
+        }
     };
 
     self.loadAutoPlaylists = function() {
@@ -503,6 +517,18 @@ function ViewModel() {
             $hoverIndicator.css("display", action == 'start' ? "inline" : "");
         }
     }
+
+    self.showSettings = function() {
+        self.settingsVisible(true);
+    }
+
+    self.saveSettings = function() {
+        // Hide the settings box
+        self.settingsVisible(false);
+
+        localStorage.setItem(settingsStorageKey, self.settings());
+        // @TODO: Write these to the server
+    }
 }
 
 // Activates knockout.js
@@ -514,11 +540,11 @@ $(document).ready(function() {
     // See if we have a username stored in the local storage.
     // NOTE: We cannot just check to see if the cookie exists using DOM manipulation. Why? Because the cookie
     // is secure, so it is inaccessible to javascript. We can get around that, though.
-    if(sessionStorage.getItem(sessionStorageKey) != null) {
+    if(sessionStorage.getItem(usernameStorageKey) != null) {
         // User might be logged in. We'll assume they are for now
         // Attempt to load the general user statistics to test the session key
         vm.viewModel.loginLoggedIn(true);
-        vm.viewModel.loadUserGeneralInfo(sessionStorage.getItem(sessionStorageKey));
+        vm.viewModel.loadUserGeneralInfo(sessionStorage.getItem(usernameStorageKey));
     } else {
         // We have no idea who logged in. We need to show the login form.
         vm.viewModel.loginLoggedIn(false);
