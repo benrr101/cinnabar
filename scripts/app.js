@@ -194,7 +194,7 @@ function ViewModel() {
 
         // Session storage lookups
         if(localStorage.getItem(settingsStorageKey) != null) {
-            self.settings(localStorage.getItem(settingsStorageKey));
+            self.settings(JSON.parse(localStorage.getItem(settingsStorageKey)));
         }
     };
 
@@ -315,7 +315,7 @@ function ViewModel() {
         }
 
         // Do we need to shuffle the playlist?
-        if(self.shuffleEnabled()) {
+        if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
             // Shuffle an re-add the original track to the top of the list
             self.nowPlayingList = self.nowPlayingList.shuffle();
             self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
@@ -343,19 +343,24 @@ function ViewModel() {
 
     self.nextTrack = function() {
         // @TODO: Do queue checking
-        // Are we at the end of the now playing
-        self.nowPlayingIndex++;
-        if(self.nowPlayingIndex >= self.nowPlayingList.length) {
-            // At the end of the list, do we repeat?
-            if(self.repeatEnabled()) {
-                // Loop back to the beginning
-                self.nowPlayingIndex = 0;
-            } else {
-                // Nope. We're done.
-                self.playingAudioObject.pause();
-                self.playing(false);
-                self.playingTrack({Metadata:{}});
-                return;
+        // If we're on random shuffle, just pick another track and keep going
+        if(self.shuffleEnabled() && self.settings().shuffleMode == 'random') {
+            self.nowPlayingIndex = Math.floor(Math.random() * (self.nowPlayingList.length-1));
+        } else {
+            // Are we at the end of the now playing
+            self.nowPlayingIndex++;
+            if(self.nowPlayingIndex >= self.nowPlayingList.length) {
+                // At the end of the list, do we repeat?
+                if(self.repeatEnabled()) {
+                    // Loop back to the beginning
+                    self.nowPlayingIndex = 0;
+                } else {
+                    // Nope. We're done.
+                    self.playingAudioObject.pause();
+                    self.playing(false);
+                    self.playingTrack({Metadata:{}});
+                    return;
+                }
             }
         }
 
@@ -390,12 +395,20 @@ function ViewModel() {
     }
 
     self.playTrack = function(track) {
-        //@TODO: Determine what quality to play
+        // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
+        var trackQuality;
+        for(var q = self.settings().quality; q >= 0; --q) {
+            if(typeof track.Qualities[q] !== "undefined") {
+                trackQuality = track.Qualities[q];
+                break;
+            }
+        }
+
         // Create an audio thing if needed
         if(self.playingAudioObject !== null) {
-            self.playingAudioObject.src = serverAddress + track.Qualities[0].Href;
+            self.playingAudioObject.src = serverAddress + trackQuality.Href;
         } else {
-            self.playingAudioObject = new Audio(serverAddress + track.Qualities[0].Href);
+            self.playingAudioObject = new Audio(serverAddress + trackQuality.Href);
             self.playingAudioObject.volume = self.playingVolume;
             self.playingAudioObject.ontimeupdate = function(e) {
                 // Update the numeric time
@@ -452,7 +465,6 @@ function ViewModel() {
     }
 
     self.togglePlayback = function() {
-        // @TODO: If the audio object doesn't exist, grab the beginning of the playlist
         if(self.playing() === false) {
             self.startPlayback();
         } else {
@@ -526,7 +538,7 @@ function ViewModel() {
         // Hide the settings box
         self.settingsVisible(false);
 
-        localStorage.setItem(settingsStorageKey, self.settings());
+        localStorage.setItem(settingsStorageKey, JSON.stringify(self.settings()));
         // @TODO: Write these to the server
     }
 }
