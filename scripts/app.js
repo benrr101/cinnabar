@@ -9,7 +9,8 @@ jQuery.support.cors = true;
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 var usernameStorageKey = "CoDUsername";
 var settingsStorageKey = "CoDSettings";
-var serverAddress = "https://dolomitetesting.cloudapp.net/";
+//var serverAddress = "https://dolomitetesting.cloudapp.net/";
+var serverAddress = "https://localhost/"
 var defaultSettings = {
     quality: "2",
     shuffleMode: "order"
@@ -459,7 +460,7 @@ function ViewModel() {
     }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.manualPlay = function(track, event) {
+    self.manualPlay = function(track, fromQueue) {
         // Build the now playing list from the existing playlist
         self.nowPlayingList = [];
         for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
@@ -468,13 +469,25 @@ function ViewModel() {
         }
 
         // Do we need to shuffle the playlist?
-        if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-            // Shuffle an re-add the original track to the top of the list
-            self.nowPlayingList = self.nowPlayingList.shuffle();
-            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
-            self.nowPlayingIndex = 0;
+        fromQueue = typeof fromQueue !== 'undefined' ? fromQueue : false;
+        if(fromQueue) {
+            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
+                // Shuffle the track list
+                self.nowPlayingList = self.nowPlayingList.shuffle();
+                self.nowPlayingIndex = -1;
+            } else {
+                // Set the current track index to -1 to start at beginning of list when track finishes
+                self.nowPlayingIndex = -1;
+            }
         } else {
-            self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
+            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
+                // Shuffle an re-add the original track to the top of the list
+                self.nowPlayingList = self.nowPlayingList.shuffle();
+                self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
+                self.nowPlayingIndex = 0;
+            } else {
+                self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
+            }
         }
 
         // Set the playing pane
@@ -485,6 +498,13 @@ function ViewModel() {
     }
 
     self.startPlayback = function() {
+        // If there are track enqueued, play the one at the top
+        if(self.playingQueue().length > 0) {
+            self.manualPlay(self.playingQueue.shift(), true);
+            return;
+        }
+
+        // Play from the start of the list, or pick a random track if shuffle is enabled
         if(self.shuffleEnabled()) {
             // Grab a random track and manually play it
             var randomIndex = Math.floor(Math.random() * (self.trackVisibleTracks().length-1));

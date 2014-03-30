@@ -71,8 +71,8 @@ div.button:hover { background-color: #2c2c2d }
 #navBar > ul { font-size: 1.375em; }
 #navBar > ul > li { position:relative; padding: 12px 20px 8px 20px; border-bottom: 2px solid #282829; }
 #navBar ul ul { font-size: 0.632em; }
-#navBar ul ul li { position: relative; padding-top:2.5px; padding-bottom:2.5px}
-#navBar ul ul li:before { left:-20px; padding-bottom:0; }
+#navBar ul ul li { position: relative; margin-left:-13px; padding-left: 13px; padding-top:2.5px; padding-bottom:2.5px}
+#navBar ul ul li:before { left:-7px; padding-bottom:0; }
 #navBar button.addButton { position: absolute; right:20px; padding: 0; height: 20px; width: 20px; background-color: #477e22; color: #dcdcdc }
 #navBar button.addButton:hover { background-color: #3f5f2b; }
 #navBar button.addButton img { position: absolute; left:5px; top:5px; }
