@@ -9,21 +9,72 @@ jQuery.support.cors = true;
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 var usernameStorageKey = "CoDUsername";
 var settingsStorageKey = "CoDSettings";
-var serverAddress = "https://localhost:8080/";
+var serverAddress = "https://localhost/";
 var defaultSettings = {
-    quality: "4",
+    quality: "2",
     shuffleMode: "order"
+};
+var metadataFields = [
+    {TagName: "Title", DisplayName: "Title", Type: "string"},
+    {TagName: "Artist", DisplayName: "Artist", Type: "string"},
+    {TagName: "AlbumArtist", DisplayName: "Album Artist", Type: "string"},
+    {TagName: "Composer", DisplayName: "Composer", Type: "string"},
+    {TagName: "Album", DisplayName: "Album", Type: "string"},
+    {TagName: "Genre", DisplayName: "Genre", Type: "string"},
+    {TagName: "Year", DisplayName: "Year", Type: "numeric"},
+    {TagName: "Track", DisplayName: "Track", Type: "string"},
+    {TagName: "TrackCount", DisplayName: "Track Count", Type: "numeric"},
+    {TagName: "Disc", DisplayName: "Disc", Type: "numeric"},
+    {TagName: "Lyrics", DisplayName: "Lyrics", Type: "string"},
+    {TagName: "BeatsPerMinute", DisplayName: "BPM", Type: "numeric"},
+    {TagName: "Conductor", DisplayName: "Conductor", Type: "string"},
+    {TagName: "Copyright", DisplayName: "Copyright", Type: "string"},
+    {TagName: "Comment", DisplayName: "Copyright", Type: "string"},
+    {TagName: "DiscCount", DisplayName: "Disc Count", Type: "numeric"},
+    {TagName: "DateAdded", DisplayName: "Date Added", Type: "date"},
+    {TagName: "PlayCount", DisplayName: "Play Count", Type: "numeric"},
+    {TagName: "LastPlayed", DisplayName: "Last Played", Type: "date"},
+    {TagName: "Duration", DisplayName: "Duration", Type: "numeric"},
+    {TagName: "TrackListing", DisplayName: "Track Listing", Type: "string"},
+    {TagName: "OriginalBitrate", DisplayName: "Original Bitrate", Type: "numeric"},
+    {TagName: "OriginalFormat", DisplayName: "Original Format", Type: "string"}
+];
+var metadataComparisons = {
+    string: [
+        {Name:"contains", DisplayName:"Contains"},
+        {Name:"sequals", DisplayName:"Equals"},
+        {Name:"snotequel", DisplayName:"Not Equal To"},
+        {Name:"startswith", DisplayName:"Starts With"},
+        {Name:"endswith", DisplayName:"Ends With"},
+        {Name:"notcontains", DisplayName:"Does Not Contain"}
+    ],
+    numeric: [
+        {Name:"greaterthan", DisplayName:">"},
+        {Name:"lessthan", DisplayName:"<"},
+        {Name:"greaterthanequal", DisplayName:">="},
+        {Name:"lessthanequal", DisplayName:"<="},
+        {Name:"equal", DisplayName:"=="},
+        {Name:"notequal", DisplayName:"!="}
+    ],
+    date: [
+        {Name:"dequal", DisplayName:"Equals"},
+        {Name:"dnotequal", DisplayName:"Not Equal To"},
+        {Name:"isafter", DisplayName:"Is After"},
+        {Name:"isbefore", DisplayName:"Is Before"},
+        {Name:"inlastdays", DisplayName:"In Last n Days"},
+        {Name:"notinlastdays", DisplayName:"Not In Last n Days"}
+    ]
 }
 
+
 function getBaseAjaxParams(method, url) {
-    var newAjaxParams = {
+    return {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        xhrFields: { withCredentials:true },
+        xhrFields: { withCredentials: true },
         type: method,
         url: url
     };
-    return newAjaxParams;
 }
 
 // UTILITY FUNCTIONS ///////////////////////////////////////////////////////
@@ -128,6 +179,20 @@ Array.prototype.move = function (old_index, new_index) {
     return this;
 };
 
+/**
+ * String starts with algorithm. I'm too lazy to write this myself, so I found
+ * someone who did it for me.
+ * @source  http://stackoverflow.com/a/646643
+ * @param   str string  The string that we're looking for at the beginning of this string
+ * @returns bool    Whether this string starts with the parameter string
+ */
+if (typeof String.prototype.startsWith != 'function') {
+    // see below for better implementation!
+    String.prototype.startsWith = function (str){
+        return this.indexOf(str) == 0;
+    };
+}
+
 // VIEW MODEL //////////////////////////////////////////////////////////////
 function ViewModel() {
     var self = this;
@@ -168,13 +233,19 @@ function ViewModel() {
     self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
     self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
     self.playingAudioObject = null;                             // The currently playing audio object
-    self.playingProgress = ko.observable(0)                     // The played percentage of the track
-    self.playingProgressTime = ko.observable(0)                 // The time played
+    self.playingProgress = ko.observable(0);                    // The played percentage of the track
+    self.playingProgressTime = ko.observable(0);                // The time played
     self.playingQueue = [];                                     // The queue of tracks to be played immediately after the current track
     self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
-    self.playlistAddModalVisible = ko.observable(false)         // Whether or not the add playlist modal is visible
-    self.playlistAddName = ko.observable(null)                  // The name for the new playlist
+    self.playlistAddModalVisible = ko.observable(false);        // Whether or not the add playlist modal is visible (false|"auto"|"static")
+    self.playlistAddName = ko.observable(null);                 // The name for the new playlist
+    self.playlistAddRules = ko.observableArray([new AutoPlaylistRule()]); // A list of rules that will be part of the auto playlist
+    self.playlistAddAnyAll = ko.observable("all");              // Whether all or any of the rules are to be met
+    self.playlistAddApplyLimit = ko.observable(false);          // Whether or not the autoplaylist will have a limiter
+    self.playlistAddLimitCount = ko.observable(10);             // The number of tracks to limit the autoplaylist to
+    self.playlistAddLimitField = ko.observable(null);           // The field to sort the autoplaylist by
+    self.playlistAddLimitDesc = ko.observable(false);           // Whether or not to sort the autoplaylist descending
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -342,6 +413,50 @@ function ViewModel() {
 
         $.ajax(params);
     };
+
+    self.submitAutoPlaylist = function() {
+        // Build a request
+        // TODO: Check that the request is valid
+        var newPlaylist = {
+            Name: self.playlistAddName(),
+            Limit: !self.playlistAddApplyLimit() ?  // Limiter is optional
+                null :
+                {
+                    Limit: self.playlistAddLimitCount(),
+                    SortField: self.playlistAddLimitField().TagName,
+                    SortDescending: self.playlistAddLimitField() != null ? self.playlistAddLimitDesc() : null   // Descending is optional param
+                },
+            MatchAll: self.playlistAddAnyAll() == 'all',
+            Rules: $.map(self.playlistAddRules(), function(element) {
+                return {Field: element.metadataField().TagName, Comparison: element.comparison().Name, Value: element.value() }
+            })
+        };
+
+        // Send the request
+        var params = getBaseAjaxParams("POST", serverAddress + "playlists/auto/");
+        params.data = JSON.stringify(newPlaylist);
+        params.error = function(jqXHR) {
+            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
+        }
+        params.success = function(response) {
+            // Add the playlist to the list of playlists
+            var playlist = {
+                Href: "playlists/auto/" + response.Guid,
+                Name: self.playlistAddName(),
+                Id: response.Guid
+            };
+            self.navAutoPlaylists.push(playlist);
+
+            // Sort the list real quick
+            self.navAutoPlaylists.sort(sortPlaylistsByName);
+
+            // Clear out the form and select the playlist
+            self.visiblePane("tracks");
+            self.loadPlaylist("auto", playlist);
+        };
+
+        $.ajax(params);
+    }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
     self.manualPlay = function(track, event) {
@@ -591,7 +706,52 @@ function ViewModel() {
 
     self.showAddStaticPlaylist = function() {
         self.playlistAddModalVisible('static');
+    };
+
+    self.showAddAutoPlaylist = function() {
+        self.visiblePane("addAutoPlaylist");
     }
+
+    self.cancelAutoPlaylist = function() {
+        // Clear out the values
+        self.playlistAddName(null);
+        self.playlistAddRules([new AutoPlaylistRule()]);
+        self.playlistAddAnyAll("all");
+        self.playlistAddApplyLimit(false);
+        self.playlistAddLimitField(null);
+        self.playlistAddLimitCount(10);
+        self.playlistAddLimitDesc(false);
+
+        // Reset the view
+        self.visiblePane("tracks");
+    }
+
+    self.autoPlaylistAddRule = function() {
+        // Create a blank rule and add it to the list
+        self.playlistAddRules.push(new AutoPlaylistRule());
+    }
+
+    self.autoPlaylistRemoveRule = function(rule) {
+        // Drop it like its hot
+        self.playlistAddRules.remove(rule);
+    }
+}
+
+function AutoPlaylistRule() {
+    var self = this;
+
+    // DATA ////////////////////////////////////////////////////////////////
+
+    self.metadataField = ko.observable();
+    self.value = ko.observable();
+    self.comparison = ko.observable();
+    self.comparisonOptions = ko.observableArray();
+
+    // ACTIONS /////////////////////////////////////////////////////////////
+    self.metadataField.subscribe(function() {
+        self.comparisonOptions = ko.observableArray(metadataComparisons[self.metadataField().Type]);
+        self.comparison(null);
+    })
 }
 
 // Activates knockout.js

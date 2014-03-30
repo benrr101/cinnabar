@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || playlistAddModalVisible()">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || playlistAddModalVisible() == 'static'">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -26,7 +26,7 @@
         <form>
             <h1>Add Playlist</h1>
             <label for='playlistName'>Playlist Name:</label>
-            <input type='text' id='playlistName' data-bind="value: playlistAddName">
+            <input type='text' id='playlistName' data-bind="value: playlistAddName" />
             <button data-bind="click: submitStaticPlaylist">Add Playlist</button>
         </form>
     </div>
@@ -47,9 +47,9 @@
                     Preferred Quality:
                 </div>
                 <div class='colRight'>
-                    <input type='radio' value='4' name='quality' id='qualityHigh' data-bind="checked: settings().quality" />
+                    <input type='radio' value='2' name='quality' id='qualityHigh' data-bind="checked: settings().quality" />
                     <label for='qualityHigh'>High Quality (320kbps)</label><br />
-                    <input type='radio' value='2' name='quality' id='qualityMed' data-bind="checked: settings().quality" />
+                    <input type='radio' value='1' name='quality' id='qualityMed' data-bind="checked: settings().quality" />
                     <label for='qualityMed'>Medium Quality (192kbps)</label><br />
                     <input type='radio' value='0' name='quality' id='qualityLow' data-bind="checked: settings().quality" />
                     <label for='qualityLow'>Low Quality (128kbps)</label>
@@ -118,9 +118,7 @@
             <img src='img/volume.png' alt='volume' title='Volume' />
             <div id='volumeBox'>
                 <div id='volumeSlider'>
-                    <div id='volumeHandle'>
-
-                    </div>
+                    <div id='volumeHandle'></div>
                 </div>
             </div>
         </div>
@@ -139,7 +137,7 @@
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'genres'}">Genres</li>
                 <li>
                     Auto Playlists
-                    <button class='addButton' title='Add Auto Playlist'>
+                    <button class='addButton' title='Add Auto Playlist' data-bind="click: showAddAutoPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
                     <ul data-bind="foreach: navAutoPlaylists()">
@@ -148,7 +146,9 @@
                 </li>
                 <li>
                     Playlists
-                    <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist"><img src='img/plus.png' alt='+' /></button>
+                    <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist">
+                        <img src='img/plus.png' alt='+' />
+                    </button>
                     <ul data-bind="foreach: navStaticPlaylists()">
                         <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static'), css:{selected: $root.visiblePane() == 'static' + Id}"></li>
                     </ul>
@@ -167,40 +167,132 @@
         </span>
         <input type='text' placeholder="Search Tracks"/>
     </div>
-    <div id='trackPane'>
-        <table>
-            <thead>
-                <tr>
-                    <th><img src='img/play_small.png' alt='Play' /></th>
-                    <th>Track #</th>
-                    <th>Title</th>
-                    <th>Time</th>
-                    <th>Artist</th>
-                    <th>Album</th>
-                    <th>Year</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody data-bind="foreach: trackVisibleTracks()">
-                <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'), mouseout: $root.trackHover.bind($data, 'end'), dblclick: $root.manualPlay}, dblclickBubble: false">
-                    <td class='playIndicator'>
-                        <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay, visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
-                            <img src='img/play_small.png' alt='Play' title='Play'/>
-                        </span>
-                        <span class='playIndicatorHover' data-bind="click: $root.manualPlay, visible: $root.playingTrack().Id != Id">
-                            <img src='img/play_small.png' alt='Play' title='Play' />
-                        </span>
-                    </td>
-                    <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
-                    <td data-bind="text: Metadata.Title"></td>
-                    <td data-bind="text: calculateTrackTime(Metadata.Duration)"></td>
-                    <td data-bind="text: Metadata.Artist"></td>
-                    <td data-bind="text: Metadata.Album"></td>
-                    <td data-bind="text: Metadata.Year"></td>
-                    <td data-bind="click: $root.enqueueTrack">EQ</td>
-                </tr>
-            </tbody>
-        </table>
+    <div id='autoPlaylistPane' class='pane' data-bind="visible: visiblePane() == 'addAutoPlaylist'">
+        <form>
+            <h1>Add Auto Playlist</h1>
+            <div class='row'>
+                <div class='colLeft tall'>
+                    <label for='aPlaylistName'>Playlist Name:</label>
+                </div>
+                <div class='colRight'>
+                    <input type='text' id='aPlaylistName' data-bind="value: playlistAddName" />
+                </div>
+            </div>
+            <div class='row'>
+                <div class='colLeft label'>Playlist Rules:</div>
+                <div class='colRight'>
+                    <table class="collapse">
+                        <thead>
+                        <tr>
+                            <th style='width: 31%'>Field</th>
+                            <th style='width: 31%'>Comparison</th>
+                            <th style='width: 31%'>Value</th>
+                            <th style='width: 7%'></th>
+                        </tr>
+                        </thead>
+                        <tbody data-bind="foreach: playlistAddRules">
+                        <tr>
+                            <td>
+                                <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Select...', value: metadataField"></select>
+                            </td>
+                            <td data-bind="with: metadataField">
+                                <select data-bind="options: $parent.comparisonOptions, optionsText: 'DisplayName', optionsCaption: 'Select...', value: $parent.comparison"></select>
+                            </td>
+                            <td data-bind="with: comparison">
+                                <input type='text' data-bind="value: $parent.value"/>
+                            </td>
+                            <td class='centerText'>
+                                <a href='#' data-bind="click: $root.autoPlaylistRemoveRule"><img src='img/trash.png' alt='Remove' /></a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button data-bind="click: autoPlaylistAddRule" style='margin-top: 7px;'>Add Rule</button>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='colLeft tall'>
+                    <label for='anyAll'>Match Mode:</label>
+                </div>
+                <div class='colRight'>
+                    <select name='anyAll' id='anyAll' data-bind="value: playlistAddAnyAll">
+                        <option value='any'>Any</option>
+                        <option value='all'>All</option>
+                    </select>
+                </div>
+            </div>
+            <div class='row'>
+                <div class='colLeft'>
+                    <label for='applyLimit'>Limit Matching Tracks:</label>
+                </div>
+                <div class='colRight'>
+                    <input type='checkbox' id='applyLimit' data-bind="checked: playlistAddApplyLimit">
+                </div>
+            </div>
+            <div class='row' data-bind="visible: playlistAddApplyLimit">
+                <div class='colLeft tall'>
+                    <label for='limitCount'>Max Tracks:</label>
+                </div>
+                <div class='colRight'>
+                    <input type='text' id='limitCount' data-bind="value: playlistAddLimitCount" style='width:164px;'>
+                </div>
+            </div>
+            <div class='row' data-bind="visible: playlistAddApplyLimit">
+                <div class='colLeft tall'>
+                    <label for='limitField'>Order By:</label>
+                </div>
+                <div class='colRight'>
+                    <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Random', value: playlistAddLimitField" id='limitField'></select>
+                </div>
+            </div>
+            <div class='row' data-bind="visible: playlistAddLimitField() != null">
+                <div class='colLeft'>
+                    <label for='limitDesc'>Descending Order:</label>
+                </div>
+                <div class='colRight'>
+                    <input type='checkbox' data-bind="checked: playlistAddLimitDesc" id='limitDesc' />
+                </div>
+            </div>
+            <button data-bind="click: submitAutoPlaylist">Add Playlist</button>
+            <button data-bind="click: cancelAutoPlaylist">Cancel</button>
+        </form>
+    </div>
+    <div id='trackPane' data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static')">
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th><img src='img/play_small.png' alt='Play' /></th>
+                        <th>Track #</th>
+                        <th>Title</th>
+                        <th>Time</th>
+                        <th>Artist</th>
+                        <th>Album</th>
+                        <th>Year</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody data-bind="foreach: trackVisibleTracks()">
+                    <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'), mouseout: $root.trackHover.bind($data, 'end'), dblclick: $root.manualPlay}, dblclickBubble: false">
+                        <td class='playIndicator'>
+                            <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay, visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
+                                <img src='img/play_small.png' alt='Play' title='Play'/>
+                            </span>
+                            <span class='playIndicatorHover' data-bind="click: $root.manualPlay, visible: $root.playingTrack().Id != Id">
+                                <img src='img/play_small.png' alt='Play' title='Play' />
+                            </span>
+                        </td>
+                        <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
+                        <td data-bind="text: Metadata.Title"></td>
+                        <td data-bind="text: calculateTrackTime(Metadata.Duration)"></td>
+                        <td data-bind="text: Metadata.Artist"></td>
+                        <td data-bind="text: Metadata.Album"></td>
+                        <td data-bind="text: Metadata.Year"></td>
+                        <td data-bind="click: $root.enqueueTrack">EQ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 </body>
