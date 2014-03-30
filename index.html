@@ -131,7 +131,7 @@
     <div id='leftBar'>
         <div id='navBar' data-bind="css:{playing: playing() != false}">
             <ul>
-                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue'}, visible: playingQueue().length > 0">
+                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue', hidden: playingQueue().length == 0}">
                     Queue
                     [<span data-bind="text: playingQueue().length"></span>]
                 </li>
