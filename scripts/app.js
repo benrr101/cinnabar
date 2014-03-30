@@ -9,7 +9,7 @@ jQuery.support.cors = true;
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 var usernameStorageKey = "CoDUsername";
 var settingsStorageKey = "CoDSettings";
-var serverAddress = "https://localhost/";
+var serverAddress = "https://dolomitetesting.cloudapp.net/";
 var defaultSettings = {
     quality: "2",
     shuffleMode: "order"
@@ -230,12 +230,12 @@ function ViewModel() {
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
-    self.playingTrack = ko.observable({Metadata: {}});          // The playing track (the blank obj is to keep null errors at bay)
+    self.playingTrack = ko.observable({Metadata: {}, Id: 0});   // The playing track (the blank obj is to keep null errors at bay)
     self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
     self.playingAudioObject = null;                             // The currently playing audio object
     self.playingProgress = ko.observable(0);                    // The played percentage of the track
     self.playingProgressTime = ko.observable(0);                // The time played
-    self.playingQueue = [];                                     // The queue of tracks to be played immediately after the current track
+    self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
     self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
     self.playlistAddModalVisible = ko.observable(false);        // Whether or not the add playlist modal is visible (false|"auto"|"static")
@@ -496,7 +496,7 @@ function ViewModel() {
 
     self.nextTrack = function() {
         // If there's a track in the queue that needs to be played, play it nao!
-        if(self.playingQueue.length > 0) {
+        if(self.playingQueue().length > 0) {
             self.fetchAndPlayTrack(self.playingQueue.shift());
             return;
         }
@@ -600,31 +600,43 @@ function ViewModel() {
 
     self.enqueueTrack = function(track) {
         self.playingQueue.push(track);
-    }
+    };
 
     self.showPlaylist = function(type, playlist) {
         // Set the visible pane
         self.visiblePane(type + playlist.Id);
 
-        // Clean out the visible tracks
-        self.trackVisibleTracks([]);
+        // Clean out the visible tracks and add the playlist's tracks
+        self.trackVisibleTracks($.map(playlist.Tracks, function(e) {
+            return self.trackLibrary[e]
+        }));
+    };
 
-        // Iterate over the tracks in the playlist and add them to the visible tracks
-        for(var i = 0; i < playlist.Tracks.length; ++i) {
-            self.trackVisibleTracks.push(self.trackLibrary[playlist.Tracks[i]]);
-        }
-    }
+    self.showQueue = function() {
+        // Set the visible pane
+        self.visiblePane("queue");
+
+        // Clear out the current visible tracks and make the queue visible
+        self.trackVisibleTracks($.map(self.playingQueue(), function(e) {
+            return self.trackLibrary[e.Id]
+        }));
+    };
 
     self.showAllTracks = function() {
         // Set the visible pane
         self.visiblePane("tracks");
 
-        self.trackVisibleTracks([]);
-
+        var keys = [];
         for(var i in self.trackLibrary) {
-            self.trackVisibleTracks.push(self.trackLibrary[i]);
+            if(typeof self.trackLibrary[i].Id !== 'undefined') {
+                keys.push(self.trackLibrary[i].Id);
+            }
         }
-    }
+
+        self.trackVisibleTracks($.map(keys, function(e) {
+            return self.trackLibrary[e];
+        }));
+    };
 
     self.togglePlayback = function() {
         if(self.playing() === false) {

@@ -131,6 +131,10 @@
     <div id='leftBar'>
         <div id='navBar' data-bind="css:{playing: playing() != false}">
             <ul>
+                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue'}, visible: playingQueue().length > 0">
+                    Queue
+                    [<span data-bind="text: playingQueue().length"></span>]
+                </li>
                 <li class='selectable' data-bind="click: showAllTracks, css:{selected: visiblePane() == 'tracks'}">Tracks</li>
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'artists'}">Artists</li>
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'albums'}">Albums</li>
@@ -257,7 +261,7 @@
             <button data-bind="click: cancelAutoPlaylist">Cancel</button>
         </form>
     </div>
-    <div id='trackPane' data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static')">
+    <div id='trackPane' data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static') || visiblePane() == 'queue'">
         <div>
             <table>
                 <thead>
