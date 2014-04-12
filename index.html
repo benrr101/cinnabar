@@ -292,7 +292,10 @@
                         <td data-bind="text: Metadata.Artist"></td>
                         <td data-bind="text: Metadata.Album"></td>
                         <td data-bind="text: Metadata.Year"></td>
-                        <td data-bind="click: $root.enqueueTrack">EQ</td>
+                        <td>
+                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack">DQ</span>
+                            <span data-bind="visible: $root.visiblePane() != 'queue', click: $root.enqueueTrack">EQ</span>
+                        </td>
                     </tr>
                 </tbody>
             </table>
