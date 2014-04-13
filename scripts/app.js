@@ -461,7 +461,7 @@ function ViewModel() {
     }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.manualPlay = function(track, fromQueue) {
+    self.manualPlay = function(fromQueue, track) {
         // Build the now playing list from the existing playlist
         self.nowPlayingList = [];
         for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
@@ -501,7 +501,7 @@ function ViewModel() {
     self.startPlayback = function() {
         // If there are track enqueued, play the one at the top
         if(self.playingQueue().length > 0) {
-            self.manualPlay(self.playingQueue.shift(), true);
+            self.manualPlay(true, self.playingQueue.shift());
             return;
         }
 
@@ -509,9 +509,9 @@ function ViewModel() {
         if(self.shuffleEnabled()) {
             // Grab a random track and manually play it
             var randomIndex = Math.floor(Math.random() * (self.trackVisibleTracks().length-1));
-            self.manualPlay(self.trackVisibleTracks()[randomIndex]);
+            self.manualPlay(false, self.trackVisibleTracks()[randomIndex]);
         } else {
-            self.manualPlay(self.trackVisibleTracks()[0]);
+            self.manualPlay(false, self.trackVisibleTracks()[0]);
         }
     }
 
