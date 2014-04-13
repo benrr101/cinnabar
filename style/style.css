@@ -93,7 +93,7 @@ div.button:hover { background-color: #2c2c2d }
 #trackPane {float: left; width: calc(100% - 275px); height: calc(100% - 48px); font-size:0.8em; overflow-y:scroll;}
 #trackPane > div { padding:10px; }
 #trackPane table { width: 100%; border-collapse: collapse; -webkit-user-select: none; -moz-user-select: none; -khtml-user-select: none; -ms-user-select: none; }
-#trackPane tbody tr:hover { cursor: pointer; background-color: #0055d4; }
+#trackPane tbody tr:hover, #trackPane tbody tr.selected { cursor: pointer; background-color: #0055d4; }
 .playIndicator { width: 25px; padding-left: 5px; vertical-align: sub; line-height: 0.8em; }
 .playIndicatorHover { display: none; }
 

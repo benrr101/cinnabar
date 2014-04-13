@@ -228,6 +228,7 @@ function ViewModel() {
     self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
+    self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
@@ -640,6 +641,9 @@ function ViewModel() {
         self.trackVisibleTracks($.map(playlist.Tracks, function(e) {
             return self.trackLibrary[e]
         }));
+
+        // Clear out the selected tracks
+        self.clearSelection();
     };
 
     self.showQueue = function() {
@@ -732,7 +736,7 @@ function ViewModel() {
         if($playingIndicator.length == 0) {
             $hoverIndicator.css("display", action == 'start' ? "inline" : "");
         }
-    }
+    };
 
     self.showSettings = function() {
         self.settingsVisible(true);
@@ -777,6 +781,41 @@ function ViewModel() {
         // Drop it like its hot
         self.playlistAddRules.remove(rule);
     }
+
+    self.selectTrack = function(track, event) {
+        if(event.ctrlKey) {
+            // Add the track if it hasn't already been added
+            if(self.selectedTracks.indexOf(track) < 0) {
+                self.selectedTracks.push(track);
+                $("#row" + track.Id).addClass("selected");
+            }
+        } else if(event.shiftKey && self.selectedTracks.length > 0) {
+            // Reset the selected list with the range of tracks from the first selected track to the clicked track
+            var firstIndex = self.trackVisibleTracks.indexOf(self.selectedTracks()[0]);
+            var lastIndex  = self.trackVisibleTracks.indexOf(track);
+            var selectedSubset;
+            if(lastIndex > firstIndex) {
+                selectedSubset = self.trackVisibleTracks.slice(firstIndex, lastIndex + 1);
+            } else {
+                selectedSubset = self.trackVisibleTracks.slice(lastIndex, firstIndex + 1);
+            }
+            $("tr.selected").removeClass("selected");
+            ko.utils.arrayForEach(self.selectedTracks, function(item) {
+                $("#row" + item.Id).addClass("selected");
+                self.selectedTracks.push(item);
+            });
+        } else {
+            // Reset the selected list with clicked track
+            self.selectedTracks = [track];
+            $("tr.selected").removeClass("selected");
+            $("#row" + track.Id).addClass("selected");
+        }
+    };
+
+    self.clearSelection = function() {
+        $("tr.selected").removeClass("selected");
+        self.selectedTracks = [];
+    };
 }
 
 function AutoPlaylistRule() {

@@ -277,7 +277,13 @@
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: trackVisibleTracks()">
-                    <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'), mouseout: $root.trackHover.bind($data, 'end'), dblclick: $root.manualPlay}, dblclickBubble: false">
+                    <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'),
+                                          mouseout: $root.trackHover.bind($data, 'end'),
+                                          dblclick: $root.manualPlay,
+                                          click: $root.selectTrack
+                                         },
+                                   dblclickBubble: false,
+                                   attr: {id: 'row' + $data.Id}">
                         <td class='playIndicator'>
                             <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay, visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
                                 <img src='img/play_small.png' alt='Play' title='Play'/>
