@@ -154,7 +154,10 @@
                         <img src='img/plus.png' alt='+' />
                     </button>
                     <ul data-bind="foreach: navStaticPlaylists()">
-                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'static'), css:{selected: $root.visiblePane() == 'static' + Id}"></li>
+                        <li class='selectable' data-bind="text: Name,
+                                                          click: $root.loadPlaylist.bind($data, 'static'),
+                                                          css:{selected: $root.visiblePane() == 'static' + Id},
+                                                          dropTrack: {vm: $root, playlist: $data}"></li>
                     </ul>
                 </li>
             </ul>

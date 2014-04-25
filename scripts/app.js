@@ -171,6 +171,21 @@ ko.bindingHandlers.dragTrack = {
     }
 }
 
+ko.bindingHandlers.dropTrack = {
+    init: function(element, valueAccessor) {
+        //var playlist = valueAccessor().playlist;
+        var viewModel = valueAccessor().vm;
+        var $elem = $(element);
+
+        $elem.droppable({
+            tolerance: "pointer",
+            drop: function(event) {
+                alert("Dropped " + viewModel.selectedTracks.length + " tracks!");
+            }
+        });
+    }
+}
+
 /**
  * Shuffle algorithm
  * @source  http://stackoverflow.com/a/10142256
