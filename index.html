@@ -283,7 +283,9 @@
                                           click: $root.selectTrack
                                          },
                                    dblclickBubble: false,
-                                   attr: {id: 'row' + $data.Id}">
+                                   attr: {id: 'row' + $data.Id},
+                                   dragTrack: {vm: $root, track: $data}
+                                   ">
                         <td class='playIndicator'>
                             <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay.bind($data, false), visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
                                 <img src='img/play_small.png' alt='Play' title='Play'/>

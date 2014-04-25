@@ -143,6 +143,32 @@ function calculateTimeVerbal(time) {
 var sortPlaylistsByName = function (left, right) {
     var l = left.Name.toLowerCase(), r = right.Name.toLowerCase();
     return l == r ? 0 : l < r ? -1 : 1;
+};
+
+// KO BINDINGS /////////////////////////////////////////////////////////////
+ko.bindingHandlers.dragTrack = {
+    init: function(element, valueAccessor) {
+        var track = valueAccessor().track;
+        var viewModel = valueAccessor().vm;
+        var $elem = $(element);
+
+        $elem.draggable({
+            cursor: "move",
+            cursorAt: { top: -12, left: -20},
+            helper: function(event) {
+                viewModel.dragging = true;
+                var selectedTrackCount = viewModel.selectedTracks.length;
+                if(selectedTrackCount == 0) {
+                    viewModel.selectTrack(track, event);
+                    selectedTrackCount = 1;
+                }
+                return $("<div class='draggingTrack'>" + selectedTrackCount + " Tracks Selected</div>");
+            },
+            stop: function() {
+                viewModel.dragging = false;
+            }
+        });
+    }
 }
 
 /**
@@ -229,6 +255,7 @@ function ViewModel() {
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
     self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
+    self.dragging = false;
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
@@ -723,6 +750,9 @@ function ViewModel() {
     }
 
     self.trackHover = function(action, model, event) {
+        // If we're dragging, don't do ANYTHING!
+        if(self.dragging) { return; }
+
         // Make the hover indicator visible or invisible. The while loop advances up the tree until hits the top of the
         // or the hovered row is found
         var $target = $(event.target);
@@ -783,7 +813,7 @@ function ViewModel() {
     }
 
     self.selectTrack = function(track, event) {
-        if(event.ctrlKey) {
+        if(event.ctrlKey || event.metaKey) {
             // Add the track if it hasn't already been added
             if(self.selectedTracks.indexOf(track) < 0) {
                 self.selectedTracks.push(track);
@@ -791,7 +821,7 @@ function ViewModel() {
             }
         } else if(event.shiftKey && self.selectedTracks.length > 0) {
             // Reset the selected list with the range of tracks from the first selected track to the clicked track
-            var firstIndex = self.trackVisibleTracks.indexOf(self.selectedTracks()[0]);
+            var firstIndex = self.trackVisibleTracks.indexOf(self.selectedTracks[0]);
             var lastIndex  = self.trackVisibleTracks.indexOf(track);
             var selectedSubset;
             if(lastIndex > firstIndex) {
@@ -799,8 +829,8 @@ function ViewModel() {
             } else {
                 selectedSubset = self.trackVisibleTracks.slice(lastIndex, firstIndex + 1);
             }
-            $("tr.selected").removeClass("selected");
-            ko.utils.arrayForEach(self.selectedTracks, function(item) {
+            self.clearSelection();
+            ko.utils.arrayForEach(selectedSubset, function(item) {
                 $("#row" + item.Id).addClass("selected");
                 self.selectedTracks.push(item);
             });
