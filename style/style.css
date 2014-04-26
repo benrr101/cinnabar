@@ -54,7 +54,7 @@ div.button:hover { background-color: #2c2c2d }
 .pane table { width: 100%; padding:0; }
 .pane table select, .pane table input[type='text'] { width: calc(100% - 20px); }
 
-.draggingTrack { padding: 10px; background-color: #dcdcdc; color: #1f1f21; }
+.draggingTrack { padding: 10px 10px 10px 20px; background-color: #dcdcdc; color: #1f1f21; }
 
 #autoPlaylistPane { overflow-y: scroll; }
 

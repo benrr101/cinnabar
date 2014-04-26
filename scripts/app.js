@@ -154,15 +154,18 @@ ko.bindingHandlers.dragTrack = {
 
         $elem.draggable({
             cursor: "move",
-            cursorAt: { top: -12, left: -20},
-            helper: function(event) {
+            cursorAt: { top: 20, left: 0},
+            start: function() {
                 viewModel.dragging = true;
-                var selectedTrackCount = viewModel.selectedTracks.length;
-                if(selectedTrackCount == 0) {
+            },
+            helper: function(event) {
+                // Clear out the selection if we're dragging a track that isn't already selected
+                if(viewModel.selectedTracks.indexOf(track) < 0) {
+                    viewModel.clearSelection();
                     viewModel.selectTrack(track, event);
-                    selectedTrackCount = 1;
                 }
-                return $("<div class='draggingTrack'>" + selectedTrackCount + " Tracks Selected</div>");
+
+                return $("<div class='draggingTrack'>" + viewModel.selectedTracks.length + " Tracks Selected</div>");
             },
             stop: function() {
                 viewModel.dragging = false;
@@ -173,14 +176,14 @@ ko.bindingHandlers.dragTrack = {
 
 ko.bindingHandlers.dropTrack = {
     init: function(element, valueAccessor) {
-        //var playlist = valueAccessor().playlist;
+        var playlist = valueAccessor().playlist;
         var viewModel = valueAccessor().vm;
         var $elem = $(element);
 
         $elem.droppable({
             tolerance: "pointer",
-            drop: function(event) {
-                alert("Dropped " + viewModel.selectedTracks.length + " tracks!");
+            drop: function() {
+                viewModel.addSelectedTracksToPlaylist(playlist);
             }
         });
     }
@@ -250,9 +253,9 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
-    self.trackLibrary = [];                     // Used for caching all tracks.
-    self.autoPlaylists = [];                    // Used for caching all auto playlists
-    self.staticPlaylists = [];                  // Used for caching all static playlists
+    self.trackLibrary = {};                     // Used for caching all tracks.
+    self.autoPlaylists = {};                    // Used for caching all auto playlists
+    self.staticPlaylists = {};                  // Used for caching all static playlists
 
     self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
     self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
@@ -500,6 +503,28 @@ function ViewModel() {
         };
 
         $.ajax(params);
+    };
+
+    self.addSelectedTracksToPlaylist = function(playlist) {
+        // TODO: Do this with a single batch call when Dolomite supports it
+        self.selectedTracks.forEach(function(item) {
+            // Build a request to add the tracks
+            var params = getBaseAjaxParams("POST", serverAddress + playlist.Href);
+            params.error = params.error = function(jqXHR) {
+                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
+            };
+            params.success = function(response) {
+                // Add the tracks to the playlist if the playlist has already been loaded
+                if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
+                    self.staticPlaylists[playlist.Id].Tracks.push(item);
+                }
+                if(playlist.Tracks !== null) {
+                    playlist.Tracks.push(item);
+                }
+            }
+            params.data = item.Id;
+            $.ajax(params);
+        });
     }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
