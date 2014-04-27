@@ -76,7 +76,7 @@ function PlaylistViewModel(type, parent) {
             };
             params.success = function() {
                 // If the playlist has already been loaded, then force a reload of the playlist
-                // We do a full reload since due to the asynch nature of the requests, the order
+                // We do a full reload since due to the async nature of the requests, the order
                 // of the playlist COULD be wrong. When the batch is supported in dolomite, this
                 // will not be a problem, and we can just tack the new track onto the end
                 self.fetch(null);

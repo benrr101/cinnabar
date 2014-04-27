@@ -346,7 +346,7 @@ function ViewModel() {
                 var pvm = new PlaylistViewModel("static", self);
                 pvm.Id = item.Id;
                 pvm.Href = item.Href;
-                pvm.Name = item.Name;
+                pvm.Name(item.Name);
                 return pvm;
             }));
         }
