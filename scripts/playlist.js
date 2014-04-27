@@ -52,7 +52,15 @@ function PlaylistViewModel(type, parent) {
                 }
             }
         } else {
-            alert("Not implemented.");
+            params.success = function(jqXHR) {
+                // Set the internal variables and mark as loaded
+                self.Tracks = ko.observable(jqXHR.Tracks);
+                self.Loaded = true;
+
+                if(callback !== null) {
+                    callback(self);
+                }
+            }
         }
 
         // Make the call

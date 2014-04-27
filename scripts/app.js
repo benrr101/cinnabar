@@ -254,10 +254,9 @@ function ViewModel() {
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
     self.trackLibrary = {};                     // Used for caching all tracks.
-    self.autoPlaylists = {};                    // Used for caching all auto playlists
+    self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
-    self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
@@ -330,7 +329,13 @@ function ViewModel() {
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
         }
         params.success = function(jqXHR) { // Store the auto playlists
-            self.navAutoPlaylists(jqXHR);
+            self.autoPlaylists(jqXHR.map(function(item) {
+                var pvm = new PlaylistViewModel("auto", self);
+                pvm.Id = item.Id;
+                pvm.Href = item.Href;
+                pvm.Name(item.Name);
+                return pvm;
+            }));
         }
         $.ajax(params);
     };
@@ -340,7 +345,7 @@ function ViewModel() {
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
         }
-        params.success = function(jqXHR) { // Store the auto playlists
+        params.success = function(jqXHR) { // Store the static playlists
             // Generate view-models for the playlists and show them in the nav bar
             self.staticPlaylists(jqXHR.map(function(item) {
                 var pvm = new PlaylistViewModel("static", self);

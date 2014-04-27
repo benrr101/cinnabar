@@ -144,8 +144,10 @@
                     <button class='addButton' title='Add Auto Playlist' data-bind="click: showAddAutoPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
-                    <ul data-bind="foreach: navAutoPlaylists()">
-                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto'), css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
+                    <ul data-bind="foreach: autoPlaylists">
+                        <li class='selectable' data-bind="text: Name,
+                                                          click: $root.loadPlaylist,
+                                                          css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
                     </ul>
                 </li>
                 <li>
