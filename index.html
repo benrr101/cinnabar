@@ -153,9 +153,9 @@
                     <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
-                    <ul data-bind="foreach: navStaticPlaylists()">
+                    <ul data-bind="foreach: staticPlaylists">
                         <li class='selectable' data-bind="text: Name,
-                                                          click: $root.loadPlaylist.bind($data, 'static'),
+                                                          click: $root.loadPlaylist,
                                                           css:{selected: $root.visiblePane() == 'static' + Id},
                                                           dropTrack: {vm: $root, playlist: $data}"></li>
                     </ul>
@@ -315,4 +315,5 @@
 </div>
 </body>
 <script src='scripts/app.js' type='text/javascript'></script>
+<script src='scripts/playlist.js' type="text/javascript"></script>
 </html>

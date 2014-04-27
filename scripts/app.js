@@ -255,10 +255,9 @@ function ViewModel() {
 
     self.trackLibrary = {};                     // Used for caching all tracks.
     self.autoPlaylists = {};                    // Used for caching all auto playlists
-    self.staticPlaylists = {};                  // Used for caching all static playlists
+    self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
     self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
-    self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
@@ -342,42 +341,24 @@ function ViewModel() {
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
         }
         params.success = function(jqXHR) { // Store the auto playlists
-            self.navStaticPlaylists(jqXHR);
+            // Generate view-models for the playlists and show them in the nav bar
+            self.staticPlaylists(jqXHR.map(function(item) {
+                var pvm = new PlaylistViewModel("static", self);
+                pvm.Id = item.Id;
+                pvm.Href = item.Href;
+                pvm.Name = item.Name;
+                return pvm;
+            }));
         }
         $.ajax(params);
     };
 
-    self.loadPlaylist = function(type, playlist) {
-        // Set up the parameters in case we need to look it up
-        var params = getBaseAjaxParams("GET", serverAddress + playlist.Href);
-        params.error = function(jqXHR) { // Show error message
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
-        };
-
-        if(type == "static") {
-            // Check for the playlist in the cache
-            if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist("static", self.staticPlaylists[playlist.Id]);
-                return;
-            } else {
-                params.success = function(jqXHR) { // Cache the playlist
-                    self.staticPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist("static", jqXHR);
-                };
-            }
+    self.loadPlaylist = function(playlist) {
+        if(playlist.Loaded) {
+            self.showPlaylist(playlist);
         } else {
-            // Check for the playlist in the cache
-            if(typeof self.autoPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist("auto", self.autoPlaylists[playlist.Id]);
-                return;
-            } else {
-                params.success = function(jqXHR) { // Cache the playlist
-                    self.autoPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist("auto", jqXHR);
-                };
-            }
+            playlist.fetch(self.showPlaylist);
         }
-        $.ajax(params);
     };
 
     self.loadTrackLibrary = function(setVisible) {
@@ -700,12 +681,12 @@ function ViewModel() {
         self.playingQueue.remove(track);
     };
 
-    self.showPlaylist = function(type, playlist) {
+    self.showPlaylist = function(playlist) {
         // Set the visible pane
-        self.visiblePane(type + playlist.Id);
+        self.visiblePane(playlist.Type + playlist.Id);
 
         // Clean out the visible tracks and add the playlist's tracks
-        self.trackVisibleTracks($.map(playlist.Tracks, function(e) {
+        self.trackVisibleTracks($.map(playlist.Tracks(), function(e) {
             return self.trackLibrary[e]
         }));
 
