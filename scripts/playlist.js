@@ -47,7 +47,9 @@ function PlaylistViewModel(type, parent) {
                 self.Tracks = ko.observableArray(jqXHR.Tracks);
                 self.Loaded = true;
 
-                callback(self);
+                if(callback !== null) {
+                    callback(self);
+                }
             }
         } else {
             alert("Not implemented.");
@@ -55,7 +57,34 @@ function PlaylistViewModel(type, parent) {
 
         // Make the call
         $.ajax(params);
+    };
+
+    self.addTracks = function(selection) {
+        // Only run this if this is a static playlist
+        if(self.type != "static") {
+            console.log("Cannot add tracks to an auto playlist");
+            return;
+        }
+
+        // Build an ajax request for EACH selected track
+        // TODO: Do this with a single batch call when Dolomite supports it
+        selection.forEach(function(item) {
+            // Build a request to add the tracks
+            var params = getBaseAjaxParams("POST", serverAddress + self.Href);
+            params.error = params.error = function(jqXHR) {
+                self.parent.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
+            };
+            params.success = function() {
+                // If the playlist has already been loaded, then force a reload of the playlist
+                // We do a full reload since due to the asynch nature of the requests, the order
+                // of the playlist COULD be wrong. When the batch is supported in dolomite, this
+                // will not be a problem, and we can just tack the new track onto the end
+                self.fetch(null);
+            };
+            params.data = item.Id;
+
+            // Fire off the request
+            $.ajax(params);
+        });
     }
-
-
-};
+}

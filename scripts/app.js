@@ -183,7 +183,7 @@ ko.bindingHandlers.dropTrack = {
         $elem.droppable({
             tolerance: "pointer",
             drop: function() {
-                viewModel.addSelectedTracksToPlaylist(playlist);
+                playlist.addTracks(viewModel.selectedTracks);
             }
         });
     }
@@ -314,8 +314,8 @@ function ViewModel() {
 
     self.bootRequests = function() {
         // Ajax requests
-        self.loadAutoPlaylists();
-        self.loadStaticPlaylists();
+        self.fetchAutoPlaylists();
+        self.fetchStaticPlaylists();
         self.loadTrackLibrary(true);
 
         // Session storage lookups
@@ -324,7 +324,7 @@ function ViewModel() {
         }
     };
 
-    self.loadAutoPlaylists = function() {
+    self.fetchAutoPlaylists = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/auto/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
@@ -335,7 +335,7 @@ function ViewModel() {
         $.ajax(params);
     };
 
-    self.loadStaticPlaylists = function() {
+    self.fetchStaticPlaylists = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
@@ -485,28 +485,6 @@ function ViewModel() {
 
         $.ajax(params);
     };
-
-    self.addSelectedTracksToPlaylist = function(playlist) {
-        // TODO: Do this with a single batch call when Dolomite supports it
-        self.selectedTracks.forEach(function(item) {
-            // Build a request to add the tracks
-            var params = getBaseAjaxParams("POST", serverAddress + playlist.Href);
-            params.error = params.error = function(jqXHR) {
-                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
-            };
-            params.success = function(response) {
-                // Add the tracks to the playlist if the playlist has already been loaded
-                if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
-                    self.staticPlaylists[playlist.Id].Tracks.push(item);
-                }
-                if(playlist.Tracks !== null) {
-                    playlist.Tracks.push(item);
-                }
-            }
-            params.data = item.Id;
-            $.ajax(params);
-        });
-    }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
     self.manualPlay = function(fromQueue, track) {
