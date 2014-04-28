@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || playlistAddModalVisible() == 'static'">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || staticPlaylistEdit() != null">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -22,12 +22,13 @@
             <button data-bind="click: loginSubmitLogin">Login</button>
         </form>
     </div>
-    <div id='addPlaylistModal' class='modal' data-bind="visible: playlistAddModalVisible() == 'static'">
+    <div id='addPlaylistModal' class='modal' data-bind="visible: staticPlaylistEdit() != null, with: staticPlaylistEdit">
         <form>
-            <h1>Add Playlist</h1>
+            <h1><span data-bind="if: Created">Edit </span><span data-bind="ifnot: Created">Add</span> Playlist</h1>
             <label for='playlistName'>Playlist Name:</label>
-            <input type='text' id='playlistName' data-bind="value: playlistAddName" />
-            <button data-bind="click: submitStaticPlaylist">Add Playlist</button>
+            <input type='text' id='playlistName' data-bind="value: Name" />
+            <button data-bind="visible: Created, click: createPlaylist">Edit Playlist</button>
+            <button data-bind="visible: !Created, click: function() { $data.createPlaylist($root.createPlaylistSuccess, $root.generalError) }">Add Playlist</button>
         </form>
     </div>
     <div id='settingsModal' class='modal' data-bind="visible: settingsVisible()">
@@ -152,7 +153,7 @@
                 </li>
                 <li>
                     Playlists
-                    <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist">
+                    <button class='addButton' title='Add Playlist' data-bind="click: addStaticPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
                     <ul data-bind="foreach: staticPlaylists">

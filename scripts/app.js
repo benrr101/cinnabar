@@ -140,11 +140,6 @@ function calculateTimeVerbal(time) {
     return days + hours + minutes + seconds + " seconds";
 }
 
-var sortPlaylistsByName = function (left, right) {
-    var l = left.Name.toLowerCase(), r = right.Name.toLowerCase();
-    return l == r ? 0 : l < r ? -1 : 1;
-};
-
 // KO BINDINGS /////////////////////////////////////////////////////////////
 ko.bindingHandlers.dragTrack = {
     init: function(element, valueAccessor) {
@@ -256,6 +251,8 @@ function ViewModel() {
     self.trackLibrary = {};                     // Used for caching all tracks.
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
+
+    self.staticPlaylistEdit = ko.observable(null);   // The static playlist that's on the editing table
 
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
@@ -416,35 +413,6 @@ function ViewModel() {
         } else {
             self.playTrack(self.trackLibrary[track.Id]);
         }
-    };
-
-    self.submitStaticPlaylist = function() {
-        // Close the playlist modal
-        self.playlistAddModalVisible(false);
-
-        // Send an ajax request to add the static playlist
-        var params = getBaseAjaxParams("POST", serverAddress + "playlists/static/");
-        params.data = JSON.stringify({Name: self.playlistAddName()});
-        params.error = function(jqXHR) {
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
-        }
-        params.success = function(response) {
-            // Add the playlist to the list of playlists
-            var newPlaylist = {
-                Href: "playlists/static/" + response.Guid,
-                Name: self.playlistAddName(),
-                Id: response.Guid
-            };
-            self.navStaticPlaylists.push(newPlaylist);
-
-            // Sort it real quick
-            self.navStaticPlaylists.sort(sortPlaylistsByName);
-
-            // Clear out the modal stuff
-            self.playlistAddName(null);
-        };
-
-        $.ajax(params);
     };
 
     self.submitAutoPlaylist = function() {
@@ -784,8 +752,10 @@ function ViewModel() {
         // @TODO: Write these to the server
     }
 
-    self.showAddStaticPlaylist = function() {
-        self.playlistAddModalVisible('static');
+    self.addStaticPlaylist = function() {
+        var playlist = new PlaylistViewModel("static");
+        playlist.Created = false;
+        self.staticPlaylistEdit(playlist);
     };
 
     self.showAddAutoPlaylist = function() {
@@ -849,6 +819,16 @@ function ViewModel() {
     self.clearSelection = function() {
         $("tr.selected").removeClass("selected");
         self.selectedTracks = [];
+    };
+
+    self.createPlaylistSuccess = function(playlist) {
+        // Add the playlist to the proper list and sort it
+        var playlistList = playlist.Type == "static" ? self.staticPlaylists : self.autoPlaylists;
+        playlistList.push(playlist);
+        playlistList.sort(PlaylistViewModel.sortByName);
+
+        // Clear out the playlist for edit
+        self.staticPlaylistEdit(null);
     };
 }
 

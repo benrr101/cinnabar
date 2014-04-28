@@ -15,6 +15,7 @@ function PlaylistViewModel(type) {
     self.Type = type;       // The type of the playlist (auto|static)
     self.Href = null;       // The Href for GETting the playlist
     self.Loaded = false;    // Whether or not the playlist has been fetched from the server
+    self.Created = true;    // Whether or not the playlist exists on the server
 
     self.Rules = null;      // Rules that an auto playlist will match
     self.MatchAll = null;   // Whether or not the auto playlist matches all rules
@@ -110,3 +111,47 @@ PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
         $.ajax(params);
     });
 };
+
+/**
+ * Sends this playlist to the server as a new playlist
+ * @param callback  Function    A callback for successful completion
+ * @param errorCallback Function    A callback for failing completion
+ */
+PlaylistViewModel.prototype.createPlaylist = function(callback, errorCallback) {
+    var self = this;
+
+    // Build the request using the internal data
+    var params = getBaseAjaxParams("POST", serverAddress + "playlists/" + self.Type + "/");
+    params.error = function(jqXHR) {
+        errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
+    }
+    params.success = function(response) {
+        // Update the internal data with the response data
+        self.Id = response.Guid;
+        self.Href = "/playlists/" + self.Type + "/" + self.Id;
+        callback(self);
+    }
+
+    // Add data based on the type of the playlist
+    if(self.Type == "static") {
+        params.data = JSON.stringify({Name: self.Name()});
+    } else {
+        throw new Error("Not implemented.");
+    }
+
+    // Call that mofo!
+    $.ajax(params);
+};
+
+/**
+ * Performs a comparison of two playlists based on their names
+ * @param left  PlaylistViewModel   The first item in the comparison
+ * @param right PlaylistViewModel   The second item in the comparison
+ * @returns Number  A positive value if left > right,
+ *                  A negative value if right > left,
+ *                  Zero if left = right
+ */
+PlaylistViewModel.sortByName = function (left, right) {
+    var l = left.Name().toLowerCase(), r = right.Name().toLowerCase();
+    return l == r ? 0 : l < r ? -1 : 1;
+}
