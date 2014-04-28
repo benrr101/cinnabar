@@ -1,18 +1,14 @@
 /**
- * Created with JetBrains PhpStorm.
- * User: Ben
- * Date: 4/27/14
- * Time: 3:53 PM
- * To change this template use File | Settings | File Templates.
+ * Playlist ViewModel
+ * @descrip This view model is used to represent a playlist. Values that need
+ *          to be observable are set as such. Actions for manipulating the
+ *          object are also provided.
+ * @author  Benjamin Russell (benrr101+dolomite@outlook.com)
  */
 
 // DATA MEMBERS ////////////////////////////////////////////////////////////
-function PlaylistViewModel(type, parent) {
+function PlaylistViewModel(type) {
     var self = this;
-
-    // PARENT VM BACK REFERENCE ////////////////////////////////////////////
-    //@TODO: Replace with callbacks to handle these sorts of things
-    self.parent = parent;   // A reference back to the parent VM for handling errors
 
     // NON-OBSERVABLE //////////////////////////////////////////////////////
     self.Id = null;         // The GUID of the playlist
@@ -27,7 +23,6 @@ function PlaylistViewModel(type, parent) {
     // OBSERVABLE //////////////////////////////////////////////////////////
     self.Name = ko.observable(null);    // The name of the playlist
     self.Tracks = ko.observableArray(); // A list of GUIDs that correspond to tracks that belong to this playlist
-
 }
 
 // ACTIONS /////////////////////////////////////////////////////////////////
@@ -37,8 +32,10 @@ function PlaylistViewModel(type, parent) {
  * completed.
  * @param callback (Function|null)  The optional callback to perform when the
  *                                  playlist has been successfully loaded
+ * @param errorCallback (Function|null) Optional callback for when the ajax
+ *                                      call fails.
  */
-PlaylistViewModel.prototype.fetch = function(callback) {
+PlaylistViewModel.prototype.fetch = function(callback, errorCallback) {
     var self = this;
 
     // Build a request for the playlist
@@ -46,7 +43,8 @@ PlaylistViewModel.prototype.fetch = function(callback) {
 
     // Add error handler
     params.error = function(jqXHR) {
-        self.parent.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
+        if(errorCallback !== null)
+            errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
     };
 
     // Set up the success handler based on the type of the playlist
@@ -80,8 +78,10 @@ PlaylistViewModel.prototype.fetch = function(callback) {
  * Adds the provided list of track guids to this static playlist.
  * @throws  Error   Thrown if this method is called on an automatic playlist.
  * @param selection Array<guid> An array of track guids to add to the playlist.
+ * @param errorCallback (Function|null) An optional callback for when the ajax
+ *                                      request fails.
  */
-PlaylistViewModel.prototype.addTracks = function(selection) {
+PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
     // Only run this if this is a static playlist
     if(this.type != "static") {
         throw new Error("Cannot add tracks to an auto playlist.");
@@ -94,7 +94,8 @@ PlaylistViewModel.prototype.addTracks = function(selection) {
         // Build a request to add the tracks
         var params = getBaseAjaxParams("POST", serverAddress + this.Href);
         params.error = params.error = function(jqXHR) {
-            this.parent.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
+            if(errorCallback !== null)
+                errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
         };
         params.success = function() {
             // If the playlist has already been loaded, then force a reload of the playlist

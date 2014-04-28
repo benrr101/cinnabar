@@ -183,7 +183,7 @@ ko.bindingHandlers.dropTrack = {
         $elem.droppable({
             tolerance: "pointer",
             drop: function() {
-                playlist.addTracks(viewModel.selectedTracks);
+                playlist.addTracks(viewModel.selectedTracks, viewModel.generalError);
             }
         });
     }
@@ -362,7 +362,7 @@ function ViewModel() {
         if(playlist.Loaded) {
             self.showPlaylist(playlist);
         } else {
-            playlist.fetch(self.showPlaylist);
+            playlist.fetch(self.showPlaylist, self.generalError);
         }
     };
 
