@@ -178,14 +178,14 @@
         <input type='text' placeholder="Search Tracks"/>
     </div>
     <div id='autoPlaylistPane' class='pane' data-bind="visible: visiblePane() == 'addAutoPlaylist'">
-        <form>
+        <form data-bind="with: autoPlaylistEdit">
             <h1>Add Auto Playlist</h1>
             <div class='row'>
                 <div class='colLeft tall'>
                     <label for='aPlaylistName'>Playlist Name:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='text' id='aPlaylistName' data-bind="value: playlistAddName" />
+                    <input type='text' id='aPlaylistName' data-bind="value: Name" />
                 </div>
             </div>
             <div class='row'>
@@ -200,35 +200,38 @@
                             <th style='width: 7%'></th>
                         </tr>
                         </thead>
-                        <tbody data-bind="foreach: playlistAddRules">
+                        <tbody data-bind="foreach: Rules">
                         <tr>
                             <td>
-                                <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Select...', value: metadataField"></select>
+                                <select data-bind="options: metadataFields,
+                                                   optionsText: 'DisplayName',
+                                                   optionsCaption: 'Select...',
+                                                   value: metadataField"></select>
                             </td>
                             <td data-bind="with: metadataField">
-                                <select data-bind="options: $parent.comparisonOptions, optionsText: 'DisplayName', optionsCaption: 'Select...', value: $parent.comparison"></select>
+                                <select data-bind="options: $parent.comparisonOptions,
+                                                   optionsText: 'DisplayName',
+                                                   optionsCaption: 'Select...',
+                                                   value: $parent.comparison"></select>
                             </td>
                             <td data-bind="with: comparison">
                                 <input type='text' data-bind="value: $parent.value"/>
                             </td>
                             <td class='centerText'>
-                                <a href='#' data-bind="click: $root.autoPlaylistRemoveRule"><img src='img/trash.png' alt='Remove' /></a>
+                                <a href='#' data-bind="click: function() { $parent.removeRule($data) }"><img src='img/trash.png' alt='Remove' /></a>
                             </td>
                         </tr>
                         </tbody>
                     </table>
-                    <button data-bind="click: autoPlaylistAddRule" style='margin-top: 7px;'>Add Rule</button>
+                    <button data-bind="click: function() { $data.addRule(); }" style='margin-top: 7px;'>Add Rule</button>
                 </div>
             </div>
             <div class='row'>
                 <div class='colLeft tall'>
-                    <label for='anyAll'>Match Mode:</label>
+                    <label for='anyAll'>Match All Rules:</label>
                 </div>
                 <div class='colRight'>
-                    <select name='anyAll' id='anyAll' data-bind="value: playlistAddAnyAll">
-                        <option value='any'>Any</option>
-                        <option value='all'>All</option>
-                    </select>
+                    <input type='checkbox' id='anyAll' data-bind="checked: MatchAll">
                 </div>
             </div>
             <div class='row'>
@@ -236,35 +239,38 @@
                     <label for='applyLimit'>Limit Matching Tracks:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='checkbox' id='applyLimit' data-bind="checked: playlistAddApplyLimit">
+                    <input type='checkbox' id='applyLimit' data-bind="checked: ApplyLimit">
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddApplyLimit">
+            <div class='row' data-bind="visible: ApplyLimit">
                 <div class='colLeft tall'>
                     <label for='limitCount'>Max Tracks:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='text' id='limitCount' data-bind="value: playlistAddLimitCount" style='width:164px;'>
+                    <input type='text' id='limitCount' data-bind="value: LimitCount" style='width:164px;'>
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddApplyLimit">
+            <div class='row' data-bind="visible: ApplyLimit">
                 <div class='colLeft tall'>
                     <label for='limitField'>Order By:</label>
                 </div>
                 <div class='colRight'>
-                    <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Random', value: playlistAddLimitField" id='limitField'></select>
+                    <select data-bind="options: metadataFields,
+                                       optionsText: 'DisplayName',
+                                       optionsCaption: 'Random',
+                                       value: LimitField" id='limitField'></select>
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddLimitField() != null">
+            <div class='row' data-bind="visible: LimitField">
                 <div class='colLeft'>
                     <label for='limitDesc'>Descending Order:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='checkbox' data-bind="checked: playlistAddLimitDesc" id='limitDesc' />
+                    <input type='checkbox' data-bind="checked: LimitDesc" id='limitDesc' />
                 </div>
             </div>
-            <button data-bind="click: submitAutoPlaylist">Add Playlist</button>
-            <button data-bind="click: cancelAutoPlaylist">Cancel</button>
+            <button data-bind="click: function() { $data.createPlaylist($root.createPlaylistSuccess, $root.generalError) }">Add Playlist</button>
+            <button data-bind="click: $root.cancelAutoPlaylist">Cancel</button>
         </form>
     </div>
     <div id='trackPane' data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static') || visiblePane() == 'queue'">
@@ -319,4 +325,5 @@
 </body>
 <script src='scripts/app.js' type='text/javascript'></script>
 <script src='scripts/playlist.js' type="text/javascript"></script>
+<script src='scripts/autoplaylistrule.js' type="text/javascript"></script>
 </html>

@@ -17,13 +17,15 @@ function PlaylistViewModel(type) {
     self.Loaded = false;    // Whether or not the playlist has been fetched from the server
     self.Created = true;    // Whether or not the playlist exists on the server
 
-    self.Rules = null;      // Rules that an auto playlist will match
-    self.MatchAll = null;   // Whether or not the auto playlist matches all rules
-    self.Limit = null;      // The limiter that was applied to the playlist
-
     // OBSERVABLE //////////////////////////////////////////////////////////
-    self.Name = ko.observable(null);    // The name of the playlist
-    self.Tracks = ko.observableArray(); // A list of GUIDs that correspond to tracks that belong to this playlist
+    self.Name = ko.observable(null);        // The name of the playlist
+    self.Tracks = ko.observableArray();     // A list of GUIDs that correspond to tracks that belong to this playlist
+    self.Rules = ko.observableArray();      // Rules that an auto playlist will match
+    self.MatchAll = ko.observable(null);    // Whether or not the auto playlist matches all rules
+    self.ApplyLimit = ko.observable(null);  // Whether or not the auto playlist has a limiter
+    self.LimitCount = ko.observable(null);  // The number of tracks to limit the auto playlist to
+    self.LimitField = ko.observable(null);  // The field to sort the auto playlist by
+    self.LimitDesc = ko.observable(null);   // Whether or not to sort the autoplaylist descending
 }
 
 // ACTIONS /////////////////////////////////////////////////////////////////
@@ -136,7 +138,21 @@ PlaylistViewModel.prototype.createPlaylist = function(callback, errorCallback) {
     if(self.Type == "static") {
         params.data = JSON.stringify({Name: self.Name()});
     } else {
-        throw new Error("Not implemented.");
+        var playlist = {
+            Name: self.Name(),
+            Limit: !self.ApplyLimit() ?  // Limiter is optional
+                null :
+                {
+                    Limit: self.LimitCount(),
+                    SortField: self.LimitField() != null ? self.LimitField().TagName : null,     // Sort field is optional param
+                    SortDescending: self.LimitField() != null ? self.LimitDesc() : null   // Descending is optional param
+                },
+            MatchAll: self.MatchAll(),
+            Rules: $.map(self.Rules(), function(element) {
+                return {Field: element.metadataField().TagName, Comparison: element.comparison().Name, Value: element.value() }
+            })
+        };
+        params.data = JSON.stringify(playlist);
     }
 
     // Call that mofo!
@@ -154,4 +170,15 @@ PlaylistViewModel.prototype.createPlaylist = function(callback, errorCallback) {
 PlaylistViewModel.sortByName = function (left, right) {
     var l = left.Name().toLowerCase(), r = right.Name().toLowerCase();
     return l == r ? 0 : l < r ? -1 : 1;
+}
+
+// NON-AJAX ////////////////////////////////////////////////////////////////
+PlaylistViewModel.prototype.removeRule = function(rule) {
+    var self = this;
+    self.Rules.remove(rule);
+}
+
+PlaylistViewModel.prototype.addRule = function() {
+    var self = this;
+    self.Rules.push(new AutoPlaylistRule());
 }

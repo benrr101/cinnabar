@@ -252,7 +252,8 @@ function ViewModel() {
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
-    self.staticPlaylistEdit = ko.observable(null);   // The static playlist that's on the editing table
+    self.staticPlaylistEdit = ko.observable(null);  // The static playlist that's on the editing table
+    self.autoPlaylistEdit = ko.observable(null);    // The auto playlist that's on the editing table
 
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
@@ -279,15 +280,6 @@ function ViewModel() {
     self.playingProgressTime = ko.observable(0);                // The time played
     self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
     self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
-
-    self.playlistAddModalVisible = ko.observable(false);        // Whether or not the add playlist modal is visible (false|"auto"|"static")
-    self.playlistAddName = ko.observable(null);                 // The name for the new playlist
-    self.playlistAddRules = ko.observableArray([new AutoPlaylistRule()]); // A list of rules that will be part of the auto playlist
-    self.playlistAddAnyAll = ko.observable("all");              // Whether all or any of the rules are to be met
-    self.playlistAddApplyLimit = ko.observable(false);          // Whether or not the autoplaylist will have a limiter
-    self.playlistAddLimitCount = ko.observable(10);             // The number of tracks to limit the autoplaylist to
-    self.playlistAddLimitField = ko.observable(null);           // The field to sort the autoplaylist by
-    self.playlistAddLimitDesc = ko.observable(false);           // Whether or not to sort the autoplaylist descending
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -413,50 +405,6 @@ function ViewModel() {
         } else {
             self.playTrack(self.trackLibrary[track.Id]);
         }
-    };
-
-    self.submitAutoPlaylist = function() {
-        // Build a request
-        // TODO: Check that the request is valid
-        var newPlaylist = {
-            Name: self.playlistAddName(),
-            Limit: !self.playlistAddApplyLimit() ?  // Limiter is optional
-                null :
-                {
-                    Limit: self.playlistAddLimitCount(),
-                    SortField: self.playlistAddLimitField().TagName,
-                    SortDescending: self.playlistAddLimitField() != null ? self.playlistAddLimitDesc() : null   // Descending is optional param
-                },
-            MatchAll: self.playlistAddAnyAll() == 'all',
-            Rules: $.map(self.playlistAddRules(), function(element) {
-                return {Field: element.metadataField().TagName, Comparison: element.comparison().Name, Value: element.value() }
-            })
-        };
-
-        // Send the request
-        var params = getBaseAjaxParams("POST", serverAddress + "playlists/auto/");
-        params.data = JSON.stringify(newPlaylist);
-        params.error = function(jqXHR) {
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
-        }
-        params.success = function(response) {
-            // Add the playlist to the list of playlists
-            var playlist = {
-                Href: "playlists/auto/" + response.Guid,
-                Name: self.playlistAddName(),
-                Id: response.Guid
-            };
-            self.navAutoPlaylists.push(playlist);
-
-            // Sort the list real quick
-            self.navAutoPlaylists.sort(sortPlaylistsByName);
-
-            // Clear out the form and select the playlist
-            self.visiblePane("tracks");
-            self.loadPlaylist("auto", playlist);
-        };
-
-        $.ajax(params);
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
@@ -759,31 +707,25 @@ function ViewModel() {
     };
 
     self.showAddAutoPlaylist = function() {
+        // Create a blank playlist and set some defaults
+        var newPlaylist = new PlaylistViewModel("auto");
+        newPlaylist.Created = false;
+        newPlaylist.MatchAll(true);
+        newPlaylist.LimitCount(10);
+        newPlaylist.LimitDesc(false);
+        newPlaylist.Rules([new AutoPlaylistRule()]);
+
+        // Show the form
+        self.autoPlaylistEdit(newPlaylist)
         self.visiblePane("addAutoPlaylist");
     }
 
     self.cancelAutoPlaylist = function() {
-        // Clear out the values
-        self.playlistAddName(null);
-        self.playlistAddRules([new AutoPlaylistRule()]);
-        self.playlistAddAnyAll("all");
-        self.playlistAddApplyLimit(false);
-        self.playlistAddLimitField(null);
-        self.playlistAddLimitCount(10);
-        self.playlistAddLimitDesc(false);
+        // Clear out the new autoplaylist
+        self.autoPlaylistEdit(null);
 
         // Reset the view
         self.visiblePane("tracks");
-    }
-
-    self.autoPlaylistAddRule = function() {
-        // Create a blank rule and add it to the list
-        self.playlistAddRules.push(new AutoPlaylistRule());
-    }
-
-    self.autoPlaylistRemoveRule = function(rule) {
-        // Drop it like its hot
-        self.playlistAddRules.remove(rule);
     }
 
     self.selectTrack = function(track, event) {
@@ -830,23 +772,6 @@ function ViewModel() {
         // Clear out the playlist for edit
         self.staticPlaylistEdit(null);
     };
-}
-
-function AutoPlaylistRule() {
-    var self = this;
-
-    // DATA ////////////////////////////////////////////////////////////////
-
-    self.metadataField = ko.observable();
-    self.value = ko.observable();
-    self.comparison = ko.observable();
-    self.comparisonOptions = ko.observableArray();
-
-    // ACTIONS /////////////////////////////////////////////////////////////
-    self.metadataField.subscribe(function() {
-        self.comparisonOptions = ko.observableArray(metadataComparisons[self.metadataField().Type]);
-        self.comparison(null);
-    })
 }
 
 // Activates knockout.js
