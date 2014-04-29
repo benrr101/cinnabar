@@ -575,9 +575,10 @@ function ViewModel() {
         self.playingQueue.push(track);
     };
 
-    self.dequeueTrack = function(track) {
-        self.trackVisibleTracks.remove(track);
-        self.playingQueue.remove(track);
+    self.dequeueTrack = function(index) {
+        // Do some fancy splicing to remove the offending index
+        self.playingQueue.splice(index(), 1);
+        self.trackVisibleTracks.splice(index(), 1);
     };
 
     self.showPlaylist = function(playlist) {

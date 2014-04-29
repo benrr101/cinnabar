@@ -313,7 +313,7 @@
                         <td data-bind="text: Metadata.Album"></td>
                         <td data-bind="text: Metadata.Year"></td>
                         <td>
-                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack">DQ</span>
+                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack.bind($data, $index)">DQ</span>
                             <span data-bind="visible: $root.visiblePane() != 'queue', click: $root.enqueueTrack">EQ</span>
                         </td>
                     </tr>
