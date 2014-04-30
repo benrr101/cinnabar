@@ -307,7 +307,7 @@ function ViewModel() {
         // Ajax requests
         self.fetchAutoPlaylists();
         self.fetchStaticPlaylists();
-        self.loadTrackLibrary(true);
+        self.fetchTracks();
 
         // Session storage lookups
         if(localStorage.getItem(settingsStorageKey) != null) {
@@ -358,7 +358,7 @@ function ViewModel() {
         }
     };
 
-    self.loadTrackLibrary = function(setVisible) {
+    self.fetchTracks = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "tracks/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
