@@ -371,9 +371,6 @@ function ViewModel() {
                 newTrack.Metadata = ko.observableDictionary(item.Metadata);
                 return newTrack;
             }));
-            for(var i = 0; i < jqXHR.length; ++i) {
-                self.trackLibrary[jqXHR[i].Id] = jqXHR[i];
-            }
         };
         $.ajax(params);
     };
@@ -396,24 +393,6 @@ function ViewModel() {
             self.bootRequests();
         }
         $.ajax(params);
-    };
-
-    self.fetchAndPlayTrack = function(track) {
-        // Fetch the track if we don't have it
-        if(self.trackLibrary[track.Id].Qualities === null) {
-            var params = getBaseAjaxParams("GET", serverAddress + "tracks/" + track.Id);
-            params.error = function(jqXHR) {
-                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
-            }
-            params.success = function(jqXHR) {
-                // Store the track in the library cache
-                self.trackLibrary[jqXHR.Id] = jqXHR;
-                self.playTrack(self.trackLibrary[jqXHR.Id]);
-            }
-            $.ajax(params);
-        } else {
-            self.playTrack(self.trackLibrary[track.Id]);
-        }
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
@@ -451,7 +430,11 @@ function ViewModel() {
         self.playingPane(self.visiblePane());
 
         // Fetch/play the first track
-        self.fetchAndPlayTrack(track);
+        if(!track.Loaded) {
+            track.fetch(self.playTrack, self.generalError)
+        } else {
+            self.playTrack(track);
+        }
     }
 
     self.startPlayback = function() {
@@ -474,7 +457,12 @@ function ViewModel() {
     self.nextTrack = function() {
         // If there's a track in the queue that needs to be played, play it nao!
         if(self.playingQueue().length > 0) {
-            self.fetchAndPlayTrack(self.playingQueue.shift());
+            var nextTrack = self.playingQueue.shift();
+            if(!nextTrack.Loaded) {
+                nextTrack.fetch(self.playTrack, self.generalError)
+            } else {
+                nextTrack.playTrack(nextTrack);
+            }
 
             // Remove the track from the top of the queue if the queue is visible
             if(self.visiblePane() == 'queue') {
@@ -505,7 +493,12 @@ function ViewModel() {
         }
 
         // Load the next track
-        self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
+        var track = self.nowPlayingList[self.nowPlayingIndex];
+        if(!track.Loaded) {
+            track.fetch(self.playTrack, self.generalError)
+        } else {
+            self.playTrack(track);
+        }
     }
 
     self.previousTrack = function() {
@@ -530,7 +523,12 @@ function ViewModel() {
             }
 
             // Load the previous track
-            self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
+            var track = self.nowPlayingList[self.nowPlayingIndex];
+            if(!track.Loaded) {
+                track.fetch(self.playTrack, self.generalError)
+            } else {
+                self.playTrack(track);
+            }
         }
     }
 

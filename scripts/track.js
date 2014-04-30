@@ -16,3 +16,35 @@ function TrackViewModel() {
     // OBSERVABLE //////////////////////////////////////////////////////////
     self.Metadata = ko.observableDictionary();  // The dictionary of metadata available for the track
 }
+
+// ACTIONS /////////////////////////////////////////////////////////////////
+// AJAX ////////////////////////////////////////////////////////////////////
+TrackViewModel.prototype.fetch = function(callback, errorCallback) {
+    var self = this;
+
+    // Check to see if the track is loaded, skip loading if it is
+    if(self.Loaded) {
+        if(callback !== null) {
+            callback(self);
+        }
+        return;
+    }
+
+    // Set up a ajax request for the track
+    var params = getBaseAjaxParams("GET", serverAddress + "tracks/" + self.Id);
+    params.error = function(xhr) {
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track library for unknown reason.")
+    }
+    params.success = function(xhr) {
+        // Store the information we don't already have
+        self.Qualities = xhr.Qualities;
+        self.ArtHref = xhr.ArtHref;
+        self.Loaded = true;
+
+        // Call the optional callback
+        if(callback !== null) {
+            callback(self);
+        }
+    }
+    $.ajax(params);
+}
