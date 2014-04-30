@@ -30,7 +30,48 @@ function PlaybackViewModel() {
     // NON-AJAX ////////////////////////////////////////////////////////////
     self.previousTrack = function() {}
     self.togglePlayback = function() {}
-    self.nextTrack = function() {}
+    self.nextTrack = function() {
+        // If there's a track in the queue that needs to be played, play it nao!
+        if(self.queue().length > 0) {
+            var nextTrack = self.queue.shift();
+            if(!nextTrack.Loaded) {
+                nextTrack.fetch(self.playTrack, vm.viewModel.generalError)
+            } else {
+                nextTrack.playTrack(nextTrack);
+            }
+            return;
+        }
+
+        // If we're on random shuffle, just pick another track and keep going
+        // @TODO: Remove references to vm.viewmodel
+        if(self.shuffleEnabled() && vm.viewModel.settings().shuffleMode == 'random') {
+            self.nowPlayingIndex = Math.floor(Math.random() * (self.nowPlayingList.length-1));
+        } else {
+            // Are we at the end of the now playing
+            self.nowPlayingIndex++;
+            if(self.nowPlayingIndex >= self.nowPlayingList.length) {
+                // At the end of the list, do we repeat?
+                if(self.repeatEnabled()) {
+                    // Loop back to the beginning
+                    self.nowPlayingIndex = 0;
+                } else {
+                    // Nope. We're done.
+                    self.audioObject.pause();
+                    self.playing(false);
+                    self.track();
+                    return;
+                }
+            }
+        }
+
+        // Load the next track
+        var track = self.nowPlayingList[self.nowPlayingIndex];
+        if(!track.Loaded) {
+            track.fetch(self.playTrack, vm.viewModel.generalError)
+        } else {
+            self.playTrack(track);
+        }
+    }
 
     self.scrubberClick = function() {}
 
@@ -96,6 +137,7 @@ function PlaybackViewModel() {
         self.audioObject.play();
     }
 
+    // EVENT HANDLERS //////////////////////////////////////////////////////
     self.onTimeUpdate = function(e) {
         // Update the numeric time
         var time = e.target.currentTime;

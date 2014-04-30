@@ -458,53 +458,6 @@ function ViewModel() {
         }
     }
 
-    self.nextTrack = function() {
-        // If there's a track in the queue that needs to be played, play it nao!
-        if(self.playingQueue().length > 0) {
-            var nextTrack = self.playingQueue.shift();
-            if(!nextTrack.Loaded) {
-                nextTrack.fetch(self.playTrack, self.generalError)
-            } else {
-                nextTrack.playTrack(nextTrack);
-            }
-
-            // Remove the track from the top of the queue if the queue is visible
-            if(self.visiblePane() == 'queue') {
-                self.trackVisibleTracks.shift();
-            }
-            return;
-        }
-
-        // If we're on random shuffle, just pick another track and keep going
-        if(self.shuffleEnabled() && self.settings().shuffleMode == 'random') {
-            self.nowPlayingIndex = Math.floor(Math.random() * (self.nowPlayingList.length-1));
-        } else {
-            // Are we at the end of the now playing
-            self.nowPlayingIndex++;
-            if(self.nowPlayingIndex >= self.nowPlayingList.length) {
-                // At the end of the list, do we repeat?
-                if(self.repeatEnabled()) {
-                    // Loop back to the beginning
-                    self.nowPlayingIndex = 0;
-                } else {
-                    // Nope. We're done.
-                    self.playingAudioObject.pause();
-                    self.playing(false);
-                    self.playingTrack({Metadata:{}});
-                    return;
-                }
-            }
-        }
-
-        // Load the next track
-        var track = self.nowPlayingList[self.nowPlayingIndex];
-        if(!track.Loaded) {
-            track.fetch(self.playTrack, self.generalError)
-        } else {
-            self.playTrack(track);
-        }
-    }
-
     self.previousTrack = function() {
         // Are we past 2% of the track?
         if(self.playingAudioObject.currentTime / self.playingAudioObject.duration * 100 >= 2 ) {
