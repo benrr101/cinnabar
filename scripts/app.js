@@ -271,18 +271,18 @@ function ViewModel() {
     self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
     self.dragging = false;
 
-    //self.playback = ko.observable(new PlaybackViewModel());
+    self.playback = ko.observable(new PlaybackViewModel());
 
-    self.playing = ko.observable(false);                        // Whether or not there are tracks playing
-    self.playingVolume = 1;                                     // The volume to play
+//    self.playing = ko.observable(false);                        // Whether or not there are tracks playing
+//    self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
-    self.playingTrack = ko.observable({Metadata: {}, Id: 0});   // The playing track (the blank obj is to keep null errors at bay)
-    self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
-    self.playingAudioObject = null;                             // The currently playing audio object
-    self.playingProgress = ko.observable(0);                    // The played percentage of the track
-    self.playingProgressTime = ko.observable(0);                // The time played
-    self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
-    self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
+//    self.playingTrack = ko.observable({Metadata: {}, Id: 0});   // The playing track (the blank obj is to keep null errors at bay)
+//    self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
+//    self.playingAudioObject = null;                             // The currently playing audio object
+//    self.playingProgress = ko.observable(0);                    // The played percentage of the track
+//    self.playingProgressTime = ko.observable(0);                // The time played
+//    self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
+//    self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -400,46 +400,46 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.manualPlay = function(fromQueue, track) {
-        // Build the now playing list from the existing playlist
-        self.nowPlayingList = [];
-        for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
-            self.nowPlayingList.push(self.trackVisibleTracks()[i]);
-            self.nowPlayingListSorted.push(self.trackVisibleTracks()[i]);
-        }
-
-        // Do we need to shuffle the playlist?
-        fromQueue = typeof fromQueue !== 'undefined' ? fromQueue : false;
-        if(fromQueue) {
-            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-                // Shuffle the track list
-                self.nowPlayingList = self.nowPlayingList.shuffle();
-                self.nowPlayingIndex = -1;
-            } else {
-                // Set the current track index to -1 to start at beginning of list when track finishes
-                self.nowPlayingIndex = -1;
-            }
-        } else {
-            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-                // Shuffle an re-add the original track to the top of the list
-                self.nowPlayingList = self.nowPlayingList.shuffle();
-                self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
-                self.nowPlayingIndex = 0;
-            } else {
-                self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
-            }
-        }
-
-        // Set the playing pane
-        self.playingPane(self.visiblePane());
-
-        // Fetch/play the first track
-        if(!track.Loaded) {
-            track.fetch(self.playTrack, self.generalError)
-        } else {
-            self.playTrack(track);
-        }
-    }
+//    self.manualPlay = function(fromQueue, track) {
+//        // Build the now playing list from the existing playlist
+//        self.nowPlayingList = [];
+//        for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
+//            self.nowPlayingList.push(self.trackVisibleTracks()[i]);
+//            self.nowPlayingListSorted.push(self.trackVisibleTracks()[i]);
+//        }
+//
+//        // Do we need to shuffle the playlist?
+//        fromQueue = typeof fromQueue !== 'undefined' ? fromQueue : false;
+//        if(fromQueue) {
+//            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
+//                // Shuffle the track list
+//                self.nowPlayingList = self.nowPlayingList.shuffle();
+//                self.nowPlayingIndex = -1;
+//            } else {
+//                // Set the current track index to -1 to start at beginning of list when track finishes
+//                self.nowPlayingIndex = -1;
+//            }
+//        } else {
+//            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
+//                // Shuffle an re-add the original track to the top of the list
+//                self.nowPlayingList = self.nowPlayingList.shuffle();
+//                self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
+//                self.nowPlayingIndex = 0;
+//            } else {
+//                self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
+//            }
+//        }
+//
+//        // Set the playing pane
+//        self.playingPane(self.visiblePane());
+//
+//        // Fetch/play the first track
+//        if(!track.Loaded) {
+//            track.fetch(self.playTrack, self.generalError)
+//        } else {
+//            self.playTrack(track);
+//        }
+//    }
 
     self.startPlayback = function() {
         // If there are track enqueued, play the one at the top
@@ -536,51 +536,51 @@ function ViewModel() {
         }
     }
 
-    self.playTrack = function(track) {
-        // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
-        var trackQuality;
-        for(var q = self.settings().quality; q >= 0; --q) {
-            if(typeof track.Qualities[q] !== "undefined") {
-                trackQuality = track.Qualities[q];
-                break;
-            }
-        }
-
-        // Create an audio thing if needed
-        if(self.playingAudioObject !== null) {
-            self.playingAudioObject.src = serverAddress + trackQuality.Href;
-        } else {
-            self.playingAudioObject = new Audio(serverAddress + trackQuality.Href);
-            self.playingAudioObject.volume = self.playingVolume;
-            self.playingAudioObject.ontimeupdate = function(e) {
-                // Update the numeric time
-                var time = e.target.currentTime;
-                self.playingProgressTime(calculateTrackTime(time));
-
-                // Update the scrubber percentage
-                if(self.playingScrubberEnabled) {
-                    var percent = time / e.target.duration * 100;
-                    self.playingProgress(percent);
-                    if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
-                        $("#playedHandle").addClass("end");
-                    }
-                }
-            }
-            self.playingAudioObject.onended = function(e) {
-                // Jump to the next track
-                self.nextTrack();
-            }
-        }
-
-        // Start that shit up!
-        $("#playedHandle").removeClass("end");
-        self.playing("playing");
-        self.playingArt(serverAddress + track.ArtHref);
-        self.playingTrack(track);
-        self.playingProgressTime(calculateTrackTime(0));
-        self.playingProgress(0);
-        self.playingAudioObject.play();
-    }
+//    self.playTrack = function(track) {
+//        // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
+//        var trackQuality;
+//        for(var q = self.settings().quality; q >= 0; --q) {
+//            if(typeof track.Qualities[q] !== "undefined") {
+//                trackQuality = track.Qualities[q];
+//                break;
+//            }
+//        }
+//
+//        // Create an audio thing if needed
+//        if(self.playingAudioObject !== null) {
+//            self.playingAudioObject.src = serverAddress + trackQuality.Href;
+//        } else {
+//            self.playingAudioObject = new Audio(serverAddress + trackQuality.Href);
+//            self.playingAudioObject.volume = self.playingVolume;
+//            self.playingAudioObject.ontimeupdate = function(e) {
+//                // Update the numeric time
+//                var time = e.target.currentTime;
+//                self.playingProgressTime(calculateTrackTime(time));
+//
+//                // Update the scrubber percentage
+//                if(self.playingScrubberEnabled) {
+//                    var percent = time / e.target.duration * 100;
+//                    self.playingProgress(percent);
+//                    if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
+//                        $("#playedHandle").addClass("end");
+//                    }
+//                }
+//            }
+//            self.playingAudioObject.onended = function(e) {
+//                // Jump to the next track
+//                self.nextTrack();
+//            }
+//        }
+//
+//        // Start that shit up!
+//        $("#playedHandle").removeClass("end");
+//        self.playing("playing");
+//        self.playingArt(serverAddress + track.ArtHref);
+//        self.playingTrack(track);
+//        self.playingProgressTime(calculateTrackTime(0));
+//        self.playingProgress(0);
+//        self.playingAudioObject.play();
+//    }
 
     self.enqueueTrack = function(track) {
         self.playingQueue.push(track);

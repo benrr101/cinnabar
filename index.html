@@ -76,7 +76,7 @@
     <div id='logo'>
         <img src='img/logo.png' title="Cinnabar on Dolomite" />
     </div>
-    <div id='playControls'>
+    <div id='playControls' data-bind="with: playback">
         <div class='button small' data-bind="click: previousTrack">
             <img src='img/back.png' alt='back' title='Previous Track' data-bind="visible: playing()" />
         </div>
@@ -88,20 +88,20 @@
             <img src='img/forward.png' alt='forward' title='Next Track' data-bind="visible: playing()" />
         </div>
     </div>
-    <div id='playSlider'>
+    <div id='playSlider' data-bind="with: playback">
         <div id='scrubber' data-bind="visible: playing(), click: scrubberClick">
-            <div id='played' data-bind="style:{width: playingProgress() + '%'}"></div>
+            <div id='played' data-bind="style:{width: progress() + '%'}"></div>
             <div id='playedHandle'></div>
         </div>
-        <div id='playInfo' data-bind="visible: playing()">
+        <div id='playInfo' data-bind="with: track">
             <div id='trackInfo'>
-                <span data-bind="text: playingTrack().Metadata.Title"></span> |
-                <span data-bind="text: playingTrack().Metadata.Artist"></span> |
-                <span data-bind="text: playingTrack().Metadata.Album"></span>
+                <span data-bind="text: Metadata.get('Title')"></span> |
+                <span data-bind="text: Metadata.get('Artist')"></span> |
+                <span data-bind="text: Metadata.get('Album')"></span>
             </div>
             <div id='timeInfo'>
-                <span data-bind="text: playingProgressTime"></span> /
-                <span data-bind="text: calculateTrackTime(playingTrack().Metadata.Duration)"></span>
+                <span data-bind="text: $parent.progressTime"></span> /
+                <span data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></span>
             </div>
         </div>
     </div>
@@ -131,11 +131,11 @@
 </div>
 <div id='mainPane'>
     <div id='leftBar'>
-        <div id='navBar' data-bind="css:{playing: playing() != false}">
+        <div id='navBar' data-bind="css:{playing: playback().playing() != false}">
             <ul>
-                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue', hidden: playingQueue().length == 0}">
+                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue', hidden: playback().queue().length == 0}">
                     Queue
-                    [<span data-bind="text: playingQueue().length"></span>]
+                    [<span data-bind="text: playback().queue().length"></span>]
                 </li>
                 <li class='selectable' data-bind="click: showAllTracks, css:{selected: visiblePane() == 'tracks'}">Tracks</li>
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'artists'}">Artists</li>
@@ -166,8 +166,8 @@
                 </li>
             </ul>
         </div>
-        <div id='albumArt' data-bind="visible: playing() != false && playingTrack().ArtHref != null">
-            <img data-bind="attr:{src: playingTrack().ArtHref != null ? playingArt() : ''}" />
+        <div id='albumArt' data-bind="with: playback().track">
+            <img data-bind="attr:{src: ArtHref}" />
         </div>
     </div>
     <div id='infoBar' style='height:48px; background-color:#0055d4;'>
@@ -292,7 +292,7 @@
                 <tbody data-bind="foreach: trackVisibleTracks()">
                     <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'),
                                           mouseout: $root.trackHover.bind($data, 'end'),
-                                          dblclick: $root.manualPlay.bind($data, false),
+                                          dblclick: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()),
                                           click: $root.selectTrack
                                          },
                                    dblclickBubble: false,
@@ -300,10 +300,10 @@
                                    dragTrack: {vm: $root, track: $data}
                                    ">
                         <td class='playIndicator'>
-                            <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay.bind($data, false), visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
-                                <img src='img/play_small.png' alt='Play' title='Play'/>
+                            <span class='playIndicatorPlaying' data-bind="click: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()), visible: $root.playingPane() == $root.visiblePane() && $root.playback().track() && $root.playback().track().Id == Id">
+                                <img src='img/play_small.png' alt='Play' title='This track is playing'/>
                             </span>
-                            <span class='playIndicatorHover' data-bind="click: $root.manualPlay.bind($data, false), visible: $root.playingTrack().Id != Id">
+                            <span class='playIndicatorHover' data-bind="click: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()), visible: $root.playback().track() && $root.playback().track().Id != Id">
                                 <img src='img/play_small.png' alt='Play' title='Play' />
                             </span>
                         </td>
@@ -325,6 +325,7 @@
 </div>
 </body>
 <script src='scripts/playlist.js' type="text/javascript"></script>
+<script src='scripts/playback.js' type="text/javascript"></script>
 <script src='scripts/autoplaylistrule.js' type="text/javascript"></script>
 <script src='scripts/track.js' type="text/javascript"></script>
 <script src='scripts/app.js' type='text/javascript'></script>
