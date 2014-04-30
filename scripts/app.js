@@ -270,6 +270,9 @@ function ViewModel() {
 
     self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
     self.dragging = false;
+
+    //self.playback = ko.observable(new PlaybackViewModel());
+
     self.playing = ko.observable(false);                        // Whether or not there are tracks playing
     self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
@@ -361,9 +364,15 @@ function ViewModel() {
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
         };
         params.success = function(jqXHR) { // Store the tracks in the invisible library
+            self.trackVisibleTracks(jqXHR.map(function(item) {
+                // Create new track view model
+                var newTrack = new TrackViewModel();
+                newTrack.Id = item.Id;
+                newTrack.Metadata = ko.observableDictionary(item.Metadata);
+                return newTrack;
+            }));
             for(var i = 0; i < jqXHR.length; ++i) {
                 self.trackLibrary[jqXHR[i].Id] = jqXHR[i];
-                if(setVisible) { self.trackVisibleTracks.push(jqXHR[i]); }
             }
         };
         $.ajax(params);
