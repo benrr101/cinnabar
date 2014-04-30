@@ -38,7 +38,7 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
     params.success = function(xhr) {
         // Store the information we don't already have
         self.Qualities = xhr.Qualities;
-        self.ArtHref = serverAddress + '/' + xhr.ArtHref;
+        self.ArtHref = xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null;
         self.Loaded = true;
 
         // Call the optional callback

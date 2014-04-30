@@ -536,52 +536,6 @@ function ViewModel() {
         }
     }
 
-//    self.playTrack = function(track) {
-//        // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
-//        var trackQuality;
-//        for(var q = self.settings().quality; q >= 0; --q) {
-//            if(typeof track.Qualities[q] !== "undefined") {
-//                trackQuality = track.Qualities[q];
-//                break;
-//            }
-//        }
-//
-//        // Create an audio thing if needed
-//        if(self.playingAudioObject !== null) {
-//            self.playingAudioObject.src = serverAddress + trackQuality.Href;
-//        } else {
-//            self.playingAudioObject = new Audio(serverAddress + trackQuality.Href);
-//            self.playingAudioObject.volume = self.playingVolume;
-//            self.playingAudioObject.ontimeupdate = function(e) {
-//                // Update the numeric time
-//                var time = e.target.currentTime;
-//                self.playingProgressTime(calculateTrackTime(time));
-//
-//                // Update the scrubber percentage
-//                if(self.playingScrubberEnabled) {
-//                    var percent = time / e.target.duration * 100;
-//                    self.playingProgress(percent);
-//                    if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
-//                        $("#playedHandle").addClass("end");
-//                    }
-//                }
-//            }
-//            self.playingAudioObject.onended = function(e) {
-//                // Jump to the next track
-//                self.nextTrack();
-//            }
-//        }
-//
-//        // Start that shit up!
-//        $("#playedHandle").removeClass("end");
-//        self.playing("playing");
-//        self.playingArt(serverAddress + track.ArtHref);
-//        self.playingTrack(track);
-//        self.playingProgressTime(calculateTrackTime(0));
-//        self.playingProgress(0);
-//        self.playingAudioObject.play();
-//    }
-
     self.enqueueTrack = function(track) {
         self.playingQueue.push(track);
     };

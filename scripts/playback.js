@@ -82,22 +82,8 @@ function PlaybackViewModel() {
         } else {
             self.audioObject = new Audio(serverAddress + trackQuality.Href);
             self.audioObject.volume = self.volume;
-            self.audioObject.ontimeupdate = function(e) {
-                // Update the numeric time
-                var time = e.target.currentTime;
-                self.progressTime(calculateTrackTime(time));
-
-                // Update the scrubber percentage
-                var percent = time / e.target.duration * 100;
-                self.progress(percent);
-                if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
-                    $("#playedHandle").addClass("end");
-                }
-            }
-            self.audioObject.onended = function(e) {
-                // Jump to the next track
-                self.nextTrack();
-            }
+            self.audioObject.ontimeupdate = self.onTimeUpdate;
+            self.audioObject.onended = self.nextTrack;
         }
 
         // Start that shit up!
@@ -108,5 +94,18 @@ function PlaybackViewModel() {
         self.progressTime(calculateTrackTime(0));
         self.progress(0);
         self.audioObject.play();
+    }
+
+    self.onTimeUpdate = function(e) {
+        // Update the numeric time
+        var time = e.target.currentTime;
+        self.progressTime(calculateTrackTime(time));
+
+        // Update the scrubber percentage
+        var percent = time / e.target.duration * 100;
+        self.progress(percent);
+        if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
+            $("#playedHandle").addClass("end");
+        }
     }
 }
