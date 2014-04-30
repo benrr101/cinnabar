@@ -248,7 +248,7 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
-    self.trackLibrary = {};                     // Used for caching all tracks.
+    self.trackLibrary = {};                          // Used for caching all tracks.
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
@@ -363,12 +363,16 @@ function ViewModel() {
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
         };
-        params.success = function(jqXHR) { // Store the tracks in the invisible library
+        params.success = function(jqXHR) { // Store the tracks in the invisible library]
             self.trackVisibleTracks(jqXHR.map(function(item) {
                 // Create new track view model
                 var newTrack = new TrackViewModel();
                 newTrack.Id = item.Id;
                 newTrack.Metadata = ko.observableDictionary(item.Metadata);
+
+                // Store in the track library
+                self.trackLibrary[item.Id] = newTrack;
+
                 return newTrack;
             }));
         };
