@@ -64,9 +64,9 @@ function PlaybackViewModel() {
         }
     }
 
-    self.togglePlayback = function() {
+    self.togglePlayback = function(tracks) {
         if(self.playing() === false) {
-            self.startPlayback();
+            self.beginPlayback(tracks, null);
         } else {
             if(self.audioObject.paused) {
                 self.audioObject.play();
@@ -161,6 +161,11 @@ function PlaybackViewModel() {
         // Do we need to shuffle the playlist?
         // @TODO: Remove references to vm.viewmodel
         if(self.shuffleEnabled() && vm.viewModel.settings().shuffleMode == 'order') {
+            // If a startup track isn't selected, then pick one at random
+            if(track === null) {
+                track = self.nowPlayingList[Math.floor(Math.random() * (self.nowPlayingList.length-1))];
+            }
+
             // Shuffle an re-add the original track to the top of the list
             self.nowPlayingList = self.nowPlayingList.shuffle();
             self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0);

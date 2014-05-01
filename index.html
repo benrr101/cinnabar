@@ -80,7 +80,7 @@
         <div class='button small' data-bind="click: previousTrack">
             <img src='img/back.png' alt='back' title='Previous Track' data-bind="visible: playing()" />
         </div>
-        <div class='button large' data-bind="click: togglePlayback">
+        <div class='button large' data-bind="click: togglePlayback.bind($data, $root.trackVisibleTracks())">
             <img src='img/pause.png' alt='pause' title='Play/Pause' data-bind="visible: playing() == 'playing'" />
             <img src='img/play.png' alt='play' title='Play/Pause' data-bind="visible: playing() == 'paused' || !playing()"/>
         </div>
