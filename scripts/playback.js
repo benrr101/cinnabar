@@ -28,16 +28,67 @@ function PlaybackViewModel() {
 
     // ACTIONS /////////////////////////////////////////////////////////////
     // NON-AJAX ////////////////////////////////////////////////////////////
-    self.previousTrack = function() {}
-    self.togglePlayback = function() {}
+    self.previousTrack = function() {
+        // Are we past 2% of the track?
+        if(self.audioObject.currentTime / self.audioObject.duration * 100 >= 2 ) {
+            // Reset the current time to 0
+            self.audioObject.currentTime = 0;
+        } else {
+            // Pause the track to avoid multiple clicks
+            self.audioObject.pause();
+
+            // Are we at the beginning of the now playing list
+            self.nowPlayingIndex--;
+            if(self.nowPlayingIndex < 0) {
+                // At the beginning of the now playing list. Do we loop around?
+                if(self.repeatEnabled()) {
+                    // Loop back to the end of the list
+                    self.nowPlayingIndex = self.nowPlayingList.length - 1;
+
+                } else {
+                    // Nope we're done.
+                    self.audioObject.pause();
+                    self.playing(false);
+                    self.track(null);
+                    return;
+                }
+            }
+
+            // Load the previous track
+            var track = self.nowPlayingList[self.nowPlayingIndex];
+            if(!track.Loaded) {
+                track.fetch(self.playTrack, self.generalError)
+            } else {
+                self.playTrack(track);
+            }
+        }
+    }
+
+    self.togglePlayback = function() {
+        if(self.playing() === false) {
+            self.startPlayback();
+        } else {
+            if(self.audioObject.paused) {
+                self.audioObject.play();
+                self.playing("playing");
+            } else {
+                self.audioObject.pause();
+                self.playing("paused");
+            }
+        }
+    }
+
     self.nextTrack = function() {
+        // Pause the current track to prevent clicking multiple times
+        self.audioObject.pause();
+
         // If there's a track in the queue that needs to be played, play it nao!
         if(self.queue().length > 0) {
             var nextTrack = self.queue.shift();
             if(!nextTrack.Loaded) {
                 nextTrack.fetch(self.playTrack, vm.viewModel.generalError)
             } else {
-                nextTrack.playTrack(nextTrack);
+                self.playTrack(nextTrack);
             }
             return;
         }
@@ -58,7 +109,7 @@ function PlaybackViewModel() {
                     // Nope. We're done.
                     self.audioObject.pause();
                     self.playing(false);
-                    self.track();
+                    self.track(null);
                     return;
                 }
             }

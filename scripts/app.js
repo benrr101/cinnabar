@@ -458,37 +458,6 @@ function ViewModel() {
         }
     }
 
-    self.previousTrack = function() {
-        // Are we past 2% of the track?
-        if(self.playingAudioObject.currentTime / self.playingAudioObject.duration * 100 >= 2 ) {
-            // Reset the current time to 0
-            self.playingAudioObject.currentTime = 0;
-        } else {
-            // Are we at the beginning of the now playing list
-            self.nowPlayingIndex--;
-            if(self.nowPlayingIndex < 0) {
-                // At the beginning of the now playing list. Do we loop around?
-                if(self.repeatEnabled()) {
-                    // Loop back to the end of the list
-                    self.nowPlayingIndex = self.nowPlayingList.length - 1;
-                } else {
-                    // Nope we're done.
-                    self.playingAudioObject.pause();
-                    self.playing(false);
-                    return;
-                }
-            }
-
-            // Load the previous track
-            var track = self.nowPlayingList[self.nowPlayingIndex];
-            if(!track.Loaded) {
-                track.fetch(self.playTrack, self.generalError)
-            } else {
-                self.playTrack(track);
-            }
-        }
-    }
-
     self.enqueueTrack = function(track) {
         self.playingQueue.push(track);
     };
@@ -537,20 +506,6 @@ function ViewModel() {
             return self.trackLibrary[e];
         }));
     };
-
-    self.togglePlayback = function() {
-        if(self.playing() === false) {
-            self.startPlayback();
-        } else {
-            if(self.playingAudioObject.paused) {
-                self.playingAudioObject.play();
-                self.playing("playing");
-            } else {
-                self.playingAudioObject.pause();
-                self.playing("paused");
-            }
-        }
-    }
 
     self.toggleShuffle = function() {
         if(self.shuffleEnabled()) {
