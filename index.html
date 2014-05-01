@@ -105,7 +105,7 @@
             </div>
         </div>
     </div>
-    <div id='listControls'>
+    <div id='listControls' data-bind="with: playback">
         <div class='button small' data-bind="click: toggleShuffle">
             <img src='img/shuffle_selected.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: shuffleEnabled()"/>
             <img src='img/shuffle.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: !shuffleEnabled()" />

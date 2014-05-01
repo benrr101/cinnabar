@@ -126,8 +126,29 @@ function PlaybackViewModel() {
 
     self.scrubberClick = function() {}
 
-    self.toggleShuffle = function() {}
-    self.toggleRepeat = function() {}
+    self.toggleShuffle = function() {
+        if(self.shuffleEnabled()) {
+            // Turn off shuffling
+            self.shuffleEnabled(false);
+
+            // Copy the sorted list back into the now playing list
+            self.nowPlayingList = [];
+            for(var i = 0; i < self.nowPlayingListSorted.length; ++i) {
+                self.nowPlayingList.push(self.nowPlayingListSorted[i]);
+            }
+            self.nowPlayingIndex = self.nowPlayingList.indexOf(self.track());
+        } else {
+            // Turn on shuffling
+            self.shuffleEnabled(true);
+            self.nowPlayingList = self.nowPlayingList.shuffle();
+            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(self.track()), 0);
+            self.nowPlayingIndex = 0;
+        }
+    }
+
+    self.toggleRepeat = function() {
+        self.repeatEnabled(!self.repeatEnabled());
+    }
 
     self.beginPlayback = function(tracks, track) {
         // Build the now playing list from the tracks
@@ -139,10 +160,10 @@ function PlaybackViewModel() {
 
         // Do we need to shuffle the playlist?
         // @TODO: Remove references to vm.viewmodel
-        if(self.shuffleEnabled() && vm.viewModel.settings.shuffleMode == 'order') {
+        if(self.shuffleEnabled() && vm.viewModel.settings().shuffleMode == 'order') {
             // Shuffle an re-add the original track to the top of the list
             self.nowPlayingList = self.nowPlayingList.shuffle();
-            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
+            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0);
             self.nowPlayingIndex = 0;
         } else {
             self.nowPlayingIndex = track !== null ? self.nowPlayingList.indexOf(track) : 0;

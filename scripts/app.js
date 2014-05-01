@@ -258,9 +258,6 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
-    self.shuffleEnabled = ko.observable(false);         // Used to show if the shuffled mode is enabled or not
-    self.repeatEnabled = ko.observable(false);          // Used to show if the repeat mode is enabled or not
-
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
     self.nowPlayingIndex = 0;                           // Index into the nowPlayingList of the currently playing track
@@ -273,16 +270,7 @@ function ViewModel() {
 
     self.playback = ko.observable(new PlaybackViewModel());
 
-//    self.playing = ko.observable(false);                        // Whether or not there are tracks playing
-//    self.playingVolume = 1;                                     // The volume to play
     self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
-//    self.playingTrack = ko.observable({Metadata: {}, Id: 0});   // The playing track (the blank obj is to keep null errors at bay)
-//    self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
-//    self.playingAudioObject = null;                             // The currently playing audio object
-//    self.playingProgress = ko.observable(0);                    // The played percentage of the track
-//    self.playingProgressTime = ko.observable(0);                // The time played
-//    self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
-//    self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -506,30 +494,6 @@ function ViewModel() {
             return self.trackLibrary[e];
         }));
     };
-
-    self.toggleShuffle = function() {
-        if(self.shuffleEnabled()) {
-            // Turn off shuffling
-            self.shuffleEnabled(false);
-
-            // Copy the sorted list back into the now playing list
-            self.nowPlayingList = [];
-            for(var i = 0; i < self.nowPlayingListSorted.length; ++i) {
-                self.nowPlayingList.push(self.nowPlayingListSorted[i]);
-            }
-            self.nowPlayingIndex = self.nowPlayingList.indexOf(self.playingTrack());
-        } else {
-            // Turn on shuffling
-            self.shuffleEnabled(true);
-            self.nowPlayingList = self.nowPlayingList.shuffle();
-            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(self.playingTrack()), 0);
-            self.nowPlayingIndex = 0;
-        }
-    }
-
-    self.toggleRepeat = function() {
-        self.repeatEnabled(!self.repeatEnabled());
-    }
 
     self.scrubberClick = function(vmodel, event) {
         // Get x offset of the click
