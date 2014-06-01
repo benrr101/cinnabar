@@ -85,8 +85,10 @@ PlaylistViewModel.prototype.fetch = function(callback, errorCallback) {
  *                                      request fails.
  */
 PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
+    var self = this;
+
     // Only run this if this is a static playlist
-    if(this.type != "static") {
+    if(self.Type != "static") {
         throw new Error("Cannot add tracks to an auto playlist.");
         return;
     }
@@ -95,7 +97,7 @@ PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
     // TODO: Do this with a single batch call when Dolomite supports it
     selection.forEach(function(item) {
         // Build a request to add the tracks
-        var params = getBaseAjaxParams("POST", serverAddress + this.Href);
+        var params = getBaseAjaxParams("POST", serverAddress + self.Href);
         params.error = params.error = function(jqXHR) {
             if(errorCallback !== null)
                 errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
@@ -105,7 +107,7 @@ PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
             // We do a full reload since due to the async nature of the requests, the order
             // of the playlist COULD be wrong. When the batch is supported in dolomite, this
             // will not be a problem, and we can just tack the new track onto the end
-            this.fetch(null);
+            self.fetch(null, errorCallback);
         };
         params.data = item.Id;
 
