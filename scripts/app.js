@@ -429,23 +429,6 @@ function ViewModel() {
 //        }
 //    }
 
-    self.startPlayback = function() {
-        // If there are track enqueued, play the one at the top
-        if(self.playingQueue().length > 0) {
-            self.manualPlay(true, self.playingQueue.shift());
-            return;
-        }
-
-        // Play from the start of the list, or pick a random track if shuffle is enabled
-        if(self.shuffleEnabled()) {
-            // Grab a random track and manually play it
-            var randomIndex = Math.floor(Math.random() * (self.trackVisibleTracks().length-1));
-            self.manualPlay(false, self.trackVisibleTracks()[randomIndex]);
-        } else {
-            self.manualPlay(false, self.trackVisibleTracks()[0]);
-        }
-    }
-
     self.enqueueTrack = function(track) {
         self.playingQueue.push(track);
     };
@@ -495,18 +478,6 @@ function ViewModel() {
         }));
     };
 
-    self.scrubberClick = function(vmodel, event) {
-        // Get x offset of the click
-        var x = event.pageX - $(event.target).offset().left;
-        var $scrubber = $(event.target).attr('id') == 'scrubber' ? $(event.target) : $(event.target).parent();
-
-        // Calculate and set the new time for the audio playback
-        var trackDuration = vm.viewModel.playingAudioObject.duration;
-        var length = parseInt($scrubber.css("width").replace("px", ""));
-        var newTime = trackDuration * x / length;
-        vm.viewModel.playingAudioObject.currentTime = newTime;
-    }
-
     self.trackHover = function(action, model, event) {
         // If we're dragging, don't do ANYTHING!
         if(self.dragging) { return; }
@@ -554,7 +525,7 @@ function ViewModel() {
         newPlaylist.Rules([new AutoPlaylistRule()]);
 
         // Show the form
-        self.autoPlaylistEdit(newPlaylist)
+        self.autoPlaylistEdit(newPlaylist);
         self.visiblePane("addAutoPlaylist");
     }
 
@@ -630,31 +601,6 @@ $(document).ready(function() {
         // We have no idea who logged in. We need to show the login form.
         vm.viewModel.loginLoggedIn(false);
     }
-
-    // Make the scrubber draggable
-    $("#playedHandle").draggable({
-        axis: "x",
-        containment: "parent",
-        start: function() {
-            // Disable the scrubber updating
-            vm.viewModel.playingScrubberEnabled = false;
-        },
-        stop: function(event, ui) {
-            // Calculate the offset into the track to set
-            var trackDuration = vm.viewModel.playingAudioObject.duration;
-            var length = parseInt($("#scrubber").css("width").replace("px",""));
-            var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
-
-            // Set the current time on the audio object
-            vm.viewModel.playingAudioObject.currentTime = newTime;
-
-            // Start the scrubber up again
-            vm.viewModel.playingScrubberEnabled = true;
-
-            // Move the handle back to where it belongs
-            $("#playedHandle").css("top", "").css("left", "");
-        }
-    });
 
     // Make the volume handle draggable
     $("#volumeHandle").draggable({

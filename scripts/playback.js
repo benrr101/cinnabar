@@ -16,9 +16,11 @@ function PlaybackViewModel() {
     self.nowPlayingListSorted = []; // The sorted list of tracks to pull now playing tracks from
     self.nowPlayingIndex;           // The index of the playing track in the now playing list
 
+    self.scrubberEnabled = true;    // Whether or not scrubber movement is enabled
+
     // OBSERVABLE //////////////////////////////////////////////////////////
     self.playing = ko.observable(false);                // Whether or not there are tracks playing
-    self.track = ko.observable();                        // The playing track (the blank obj is to keep null errors at bay)
+    self.track = ko.observable();                       // The playing track (the blank obj is to keep null errors at bay)
     self.art = ko.observable(null);                     // The Href for the currently playing album art
     self.progress = ko.observable(0);                   // The played percentage of the track
     self.progressTime = ko.observable(0);               // The time played
@@ -124,7 +126,20 @@ function PlaybackViewModel() {
         }
     }
 
-    self.scrubberClick = function() {}
+    self.scrubberClick = function(vmodel, event) {
+        // Get x offset of the click
+        var $target = $(event.target);
+        var x = event.pageX - $target.offset().left;
+        // If the click is on the played indicator bar, the scrubber is the parent,
+        // if the click is on the unplayed portion, the scrubber is this
+        var $scrubber = $target.attr('id') == 'scrubber' ? $target : $target.parent();
+
+        // Calculate and set the new time for the audio playback
+        var trackDuration = self.audioObject.duration;
+        var length = parseInt($scrubber.css("width").replace("px", ""));
+        var newTime = trackDuration * x / length;
+        self.audioObject.currentTime = newTime;
+    }
 
     self.toggleShuffle = function() {
         if(self.shuffleEnabled()) {
@@ -220,11 +235,46 @@ function PlaybackViewModel() {
         var time = e.target.currentTime;
         self.progressTime(calculateTrackTime(time));
 
-        // Update the scrubber percentage
-        var percent = time / e.target.duration * 100;
-        self.progress(percent);
-        if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
-            $("#playedHandle").addClass("end");
+        // Update the scrubber percentage if the scrubber is enabled
+        if(self.scrubberEnabled) {
+            var percent = time / e.target.duration * 100;
+            self.progress(percent);
+            if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
+                $("#playedHandle").addClass("end");
+            }
         }
     }
+
+    self.scrubberDragStart = function() {
+        // Turn off the scrubber updates
+        self.scrubberEnabled = false;
+    }
+
+    self.scrubberDragStop = function(event, ui) {
+        // Calculate the offset into the track to set
+        var trackDuration = self.audioObject.duration;
+        var length = parseInt($("#scrubber").css("width").replace("px",""));
+        var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
+
+        // Set the current time on the audio object
+        self.audioObject.currentTime = newTime;
+
+        // Start the scrubber up again
+        self.scrubberEnabled = true;
+
+        // Move the handle back to where it belongs
+        $("#playedHandle").css("top", "").css("left", "");
+    }
+
+    // DOCUMENT READY HANDLERS /////////////////////////////////////////////////
+    $(document).ready(function() {
+        // Make the scrubber draggable
+        $("#playedHandle").draggable({
+            axis: "x",
+            containment: "parent",
+            start: self.scrubberDragStart,
+            stop: self.scrubberDragStop
+        });
+    });
 }
+
