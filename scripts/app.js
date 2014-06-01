@@ -581,6 +581,38 @@ function ViewModel() {
         // Clear out the playlist for edit
         self.staticPlaylistEdit(null);
     };
+
+    self.volumeDragStart = function() {
+        // Prevent the volume dropdown from sliding back up
+        $(this).parent().parent().addClass("locaked");
+    }
+
+    self.volumeDragDrag = function(event, ui) {
+        // Calculate the volume
+        var height = parseInt($("#volumeSlider").css("height").replace("px", ""));
+        var newVol = (height - ui.position.top) / height;
+
+        // TODO: Store the volume in the settings
+
+        // Change the volume in the playback viewmodel
+        self.playback().setVolume(newVol);
+    }
+
+    self.volumeDragStop = function() {
+        // Allow the volume dropdown to hide itself
+        $(this).parent().parent().removeClass("locked");
+    }
+
+    // DOCUMENT READY HANDLES //////////////////////////////////////////////
+    $(document).ready(function() {
+        $("#volumeHandle").draggable({
+            axis: "y",
+            containment: "parent",
+            start: self.volumeDragStart,
+            drag: self.volumeDragDrag,
+            stop: self.volumeDragStop
+        });
+    });
 }
 
 // Activates knockout.js
@@ -601,31 +633,5 @@ $(document).ready(function() {
         // We have no idea who logged in. We need to show the login form.
         vm.viewModel.loginLoggedIn(false);
     }
-
-    // Make the volume handle draggable
-    $("#volumeHandle").draggable({
-        axis: "y",
-        containment: "parent",
-        start: function(event, ui) {
-            $(this).parent().parent().addClass("locked");
-        },
-        drag: function(event, ui) {
-            // Calculate the volume
-            var height = parseInt($("#volumeSlider").css("height").replace("px", ""));
-            var newVol = (height - ui.position.top) / height;
-            //newVol = newVol * 100 < 1 ? newVol = 0 : newVol;
-
-            // If there's a playing audio thingy, change the volume
-            if(vm.viewModel.playingAudioObject != null) {
-                vm.viewModel.playingAudioObject.volume = newVol;
-            }
-
-            // Set the volume in the state anyhow if it's not playing
-            vm.viewModel.playingVolume = newVol;
-        },
-        stop: function(){
-            $(this).parent().parent().removeClass("locked");
-        }
-    });
 });
 

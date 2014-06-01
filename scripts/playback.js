@@ -9,7 +9,6 @@ function PlaybackViewModel() {
     var self = this;
 
     // NON-OBSERVABLE //////////////////////////////////////////////////////
-    self.volume = 1;            // The volume to play
     self.audioObject = null;    // The currently playing audio object
 
     self.nowPlayingList = [];       // The tracks to pull now playing tracks from
@@ -25,8 +24,9 @@ function PlaybackViewModel() {
     self.progress = ko.observable(0);                   // The played percentage of the track
     self.progressTime = ko.observable(0);               // The time played
     self.queue = ko.observableArray();                  // The queue of tracks to be played immediately after the current track
-    self.shuffleEnabled = ko.observable(false);
-    self.repeatEnabled = ko.observable(false);
+    self.shuffleEnabled = ko.observable(false);         // Whether or not shuffle is enabled
+    self.repeatEnabled = ko.observable(false);          // Whether or not repeating is enabled
+    self.volume = ko.observable(1);                     // The volume percentage
 
     // ACTIONS /////////////////////////////////////////////////////////////
     // NON-AJAX ////////////////////////////////////////////////////////////
@@ -214,7 +214,7 @@ function PlaybackViewModel() {
             self.audioObject.src = serverAddress + trackQuality.Href;
         } else {
             self.audioObject = new Audio(serverAddress + trackQuality.Href);
-            self.audioObject.volume = self.volume;
+            self.audioObject.volume = self.volume();
             self.audioObject.ontimeupdate = self.onTimeUpdate;
             self.audioObject.onended = self.nextTrack;
         }
@@ -227,6 +227,14 @@ function PlaybackViewModel() {
         self.progressTime(calculateTrackTime(0));
         self.progress(0);
         self.audioObject.play();
+    }
+
+    self.setVolume = function(percent) {
+        // Store the volume and set it in the audio object
+        self.volume = percent;
+        if(self.audioObject != null) {
+            self.audioObject.volume = percent;
+        }
     }
 
     // EVENT HANDLERS //////////////////////////////////////////////////////
