@@ -65,7 +65,7 @@ var metadataComparisons = {
         {Name:"inlastdays", DisplayName:"In Last n Days"},
         {Name:"notinlastdays", DisplayName:"Not In Last n Days"}
     ]
-}
+};
 
 
 function getBaseAjaxParams(method, url) {
@@ -167,7 +167,7 @@ ko.bindingHandlers.dragTrack = {
             }
         });
     }
-}
+};
 
 ko.bindingHandlers.dropTrack = {
     init: function(element, valueAccessor) {
@@ -182,7 +182,7 @@ ko.bindingHandlers.dropTrack = {
             }
         });
     }
-}
+};
 
 /**
  * Shuffle algorithm
@@ -199,7 +199,7 @@ Array.prototype.shuffle = function() {
         this[j] = temp;
     }
     return this;
-}
+};
 
 /**
  * Array movement algorithm
@@ -307,16 +307,16 @@ function ViewModel() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/auto/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
-        }
+        };
         params.success = function(jqXHR) { // Store the auto playlists
             self.autoPlaylists(jqXHR.map(function(item) {
-                var pvm = new PlaylistViewModel("auto", self);
+                var pvm = new PlaylistViewModel("auto");
                 pvm.Id = item.Id;
                 pvm.Href = item.Href;
                 pvm.Name(item.Name);
                 return pvm;
             }));
-        }
+        };
         $.ajax(params);
     };
 
@@ -324,17 +324,17 @@ function ViewModel() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
-        }
+        };
         params.success = function(jqXHR) { // Store the static playlists
             // Generate view-models for the playlists and show them in the nav bar
             self.staticPlaylists(jqXHR.map(function(item) {
-                var pvm = new PlaylistViewModel("static", self);
+                var pvm = new PlaylistViewModel("static");
                 pvm.Id = item.Id;
                 pvm.Href = item.Href;
                 pvm.Name(item.Name);
                 return pvm;
             }));
-        }
+        };
         $.ajax(params);
     };
 
@@ -383,60 +383,20 @@ function ViewModel() {
             self.infoTotalTracks(jqXHR.Count);
             self.infoTotalTime(calculateTimeVerbal(jqXHR.TotalTime));
             self.bootRequests();
-        }
+        };
         $.ajax(params);
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-//    self.manualPlay = function(fromQueue, track) {
-//        // Build the now playing list from the existing playlist
-//        self.nowPlayingList = [];
-//        for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
-//            self.nowPlayingList.push(self.trackVisibleTracks()[i]);
-//            self.nowPlayingListSorted.push(self.trackVisibleTracks()[i]);
-//        }
-//
-//        // Do we need to shuffle the playlist?
-//        fromQueue = typeof fromQueue !== 'undefined' ? fromQueue : false;
-//        if(fromQueue) {
-//            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-//                // Shuffle the track list
-//                self.nowPlayingList = self.nowPlayingList.shuffle();
-//                self.nowPlayingIndex = -1;
-//            } else {
-//                // Set the current track index to -1 to start at beginning of list when track finishes
-//                self.nowPlayingIndex = -1;
-//            }
-//        } else {
-//            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-//                // Shuffle an re-add the original track to the top of the list
-//                self.nowPlayingList = self.nowPlayingList.shuffle();
-//                self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
-//                self.nowPlayingIndex = 0;
-//            } else {
-//                self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
-//            }
-//        }
-//
-//        // Set the playing pane
-//        self.playingPane(self.visiblePane());
-//
-//        // Fetch/play the first track
-//        if(!track.Loaded) {
-//            track.fetch(self.playTrack, self.generalError)
-//        } else {
-//            self.playTrack(track);
-//        }
-//    }
-
     self.enqueueTrack = function(track) {
-        self.playingQueue.push(track);
+        // Pass the request to the playback vm
+        self.playback().enqueueTrack(track);
     };
 
     self.dequeueTrack = function(index) {
-        // Do some fancy splicing to remove the offending index
-        self.playingQueue.splice(index(), 1);
+        // Remove the track from the visible queue, then pass the call to the playback vm
         self.trackVisibleTracks.splice(index(), 1);
+        self.playback().dequeueTrack(index);
     };
 
     self.showPlaylist = function(playlist) {
@@ -457,7 +417,7 @@ function ViewModel() {
         self.visiblePane("queue");
 
         // Clear out the current visible tracks and make the queue visible
-        self.trackVisibleTracks($.map(self.playingQueue(), function(e) {
+        self.trackVisibleTracks($.map(self.playback().queue(), function(e) {
             return self.trackLibrary[e.Id]
         }));
     };
@@ -499,7 +459,7 @@ function ViewModel() {
 
     self.showSettings = function() {
         self.settingsVisible(true);
-    }
+    };
 
     self.saveSettings = function() {
         // Hide the settings box
@@ -507,7 +467,7 @@ function ViewModel() {
 
         localStorage.setItem(settingsStorageKey, JSON.stringify(self.settings()));
         // @TODO: Write these to the server
-    }
+    };
 
     self.addStaticPlaylist = function() {
         var playlist = new PlaylistViewModel("static");
@@ -527,7 +487,7 @@ function ViewModel() {
         // Show the form
         self.autoPlaylistEdit(newPlaylist);
         self.visiblePane("addAutoPlaylist");
-    }
+    };
 
     self.cancelAutoPlaylist = function() {
         // Clear out the new autoplaylist
@@ -535,7 +495,7 @@ function ViewModel() {
 
         // Reset the view
         self.visiblePane("tracks");
-    }
+    };
 
     self.selectTrack = function(track, event) {
         if(event.ctrlKey || event.metaKey) {
@@ -585,7 +545,7 @@ function ViewModel() {
     self.volumeDragStart = function() {
         // Prevent the volume dropdown from sliding back up
         $(this).parent().parent().addClass("locaked");
-    }
+    };
 
     self.volumeDragDrag = function(event, ui) {
         // Calculate the volume
@@ -596,12 +556,12 @@ function ViewModel() {
 
         // Change the volume in the playback viewmodel
         self.playback().setVolume(newVol);
-    }
+    };
 
     self.volumeDragStop = function() {
         // Allow the volume dropdown to hide itself
         $(this).parent().parent().removeClass("locked");
-    }
+    };
 
     // DOCUMENT READY HANDLES //////////////////////////////////////////////
     $(document).ready(function() {

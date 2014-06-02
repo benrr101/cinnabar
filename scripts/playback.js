@@ -229,6 +229,15 @@ function PlaybackViewModel() {
         self.audioObject.play();
     }
 
+    self.enqueueTrack = function(track) {
+        self.queue.push(track);
+    }
+
+    self.dequeueTrack = function(index) {
+        // Do some fancy splicing to remove the offending index
+        self.queue.splice(index(), 1);
+    }
+
     self.setVolume = function(percent) {
         // Store the volume and set it in the audio object
         self.volume = percent;
