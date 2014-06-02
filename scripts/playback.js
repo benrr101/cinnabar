@@ -64,7 +64,7 @@ function PlaybackViewModel() {
                 self.playTrack(track);
             }
         }
-    }
+    };
 
     self.togglePlayback = function(tracks) {
         if(self.playing() === false) {
@@ -78,7 +78,7 @@ function PlaybackViewModel() {
                 self.playing("paused");
             }
         }
-    }
+    };
 
     self.nextTrack = function() {
         // Pause the current track to prevent clicking multiple times
@@ -124,7 +124,7 @@ function PlaybackViewModel() {
         } else {
             self.playTrack(track);
         }
-    }
+    };
 
     self.scrubberClick = function(vmodel, event) {
         // Get x offset of the click
@@ -139,7 +139,7 @@ function PlaybackViewModel() {
         var length = parseInt($scrubber.css("width").replace("px", ""));
         var newTime = trackDuration * x / length;
         self.audioObject.currentTime = newTime;
-    }
+    };
 
     self.toggleShuffle = function() {
         if(self.shuffleEnabled()) {
@@ -159,11 +159,11 @@ function PlaybackViewModel() {
             self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(self.track()), 0);
             self.nowPlayingIndex = 0;
         }
-    }
+    };
 
     self.toggleRepeat = function() {
         self.repeatEnabled(!self.repeatEnabled());
-    }
+    };
 
     self.beginPlayback = function(tracks, track) {
         // Build the now playing list from the tracks
@@ -196,7 +196,7 @@ function PlaybackViewModel() {
         } else {
             self.playTrack(track);
         }
-    }
+    };
 
     self.playTrack = function(track) {
         // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
@@ -227,16 +227,16 @@ function PlaybackViewModel() {
         self.progressTime(calculateTrackTime(0));
         self.progress(0);
         self.audioObject.play();
-    }
+    };
 
     self.enqueueTrack = function(track) {
         self.queue.push(track);
-    }
+    };
 
     self.dequeueTrack = function(index) {
         // Do some fancy splicing to remove the offending index
         self.queue.splice(index(), 1);
-    }
+    };
 
     self.setVolume = function(percent) {
         // Store the volume and set it in the audio object
@@ -244,7 +244,7 @@ function PlaybackViewModel() {
         if(self.audioObject != null) {
             self.audioObject.volume = percent;
         }
-    }
+    };
 
     // EVENT HANDLERS //////////////////////////////////////////////////////
     self.onTimeUpdate = function(e) {
@@ -260,12 +260,12 @@ function PlaybackViewModel() {
                 $("#playedHandle").addClass("end");
             }
         }
-    }
+    };
 
     self.scrubberDragStart = function() {
         // Turn off the scrubber updates
         self.scrubberEnabled = false;
-    }
+    };
 
     self.scrubberDragStop = function(event, ui) {
         // Calculate the offset into the track to set
@@ -281,7 +281,7 @@ function PlaybackViewModel() {
 
         // Move the handle back to where it belongs
         $("#playedHandle").css("top", "").css("left", "");
-    }
+    };
 
     // DOCUMENT READY HANDLERS /////////////////////////////////////////////////
     $(document).ready(function() {
