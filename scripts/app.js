@@ -65,7 +65,7 @@ var metadataComparisons = {
         {Name:"inlastdays", DisplayName:"In Last n Days"},
         {Name:"notinlastdays", DisplayName:"Not In Last n Days"}
     ]
-}
+};
 
 
 function getBaseAjaxParams(method, url) {
@@ -140,15 +140,10 @@ function calculateTimeVerbal(time) {
     return days + hours + minutes + seconds + " seconds";
 }
 
-var sortPlaylistsByName = function (left, right) {
-    var l = left.Name.toLowerCase(), r = right.Name.toLowerCase();
-    return l == r ? 0 : l < r ? -1 : 1;
-};
-
 // KO BINDINGS /////////////////////////////////////////////////////////////
 ko.bindingHandlers.dragTrack = {
     init: function(element, valueAccessor) {
-        var track = valueAccessor().track;
+        var index = valueAccessor().index;
         var viewModel = valueAccessor().vm;
         var $elem = $(element);
 
@@ -160,19 +155,19 @@ ko.bindingHandlers.dragTrack = {
             },
             helper: function(event) {
                 // Clear out the selection if we're dragging a track that isn't already selected
-                if(viewModel.selectedTracks.indexOf(track) < 0) {
+                if(viewModel.selectedTracks.indexOf(index) < 0) {
                     viewModel.clearSelection();
-                    viewModel.selectTrack(track, event);
+                    viewModel.selectTrack(index, event);
                 }
 
-                return $("<div class='draggingTrack'>" + viewModel.selectedTracks.length + " Tracks Selected</div>");
+                return $("<div class='draggingTrack'>" + viewModel.selectedTracks().length + " Tracks Selected</div>");
             },
             stop: function() {
                 viewModel.dragging = false;
             }
         });
     }
-}
+};
 
 ko.bindingHandlers.dropTrack = {
     init: function(element, valueAccessor) {
@@ -183,11 +178,17 @@ ko.bindingHandlers.dropTrack = {
         $elem.droppable({
             tolerance: "pointer",
             drop: function() {
-                viewModel.addSelectedTracksToPlaylist(playlist);
+                // Convert the selected indices list to a list of tracks
+                var selectedTracks = [];
+                for(var i = 0; i < viewModel.selectedTracks().length; ++i) {
+                    selectedTracks.push(viewModel.trackVisibleTracks()[i]);
+                }
+
+                playlist.addTracks(selectedTracks, viewModel.generalError);
             }
         });
     }
-}
+};
 
 /**
  * Shuffle algorithm
@@ -204,7 +205,7 @@ Array.prototype.shuffle = function() {
         this[j] = temp;
     }
     return this;
-}
+};
 
 /**
  * Array movement algorithm
@@ -253,17 +254,15 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
-    self.trackLibrary = {};                     // Used for caching all tracks.
-    self.autoPlaylists = {};                    // Used for caching all auto playlists
-    self.staticPlaylists = {};                  // Used for caching all static playlists
+    self.trackLibrary = {};                          // Used for caching all tracks.
+    self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
+    self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
-    self.navAutoPlaylists = ko.observableArray();       // Used for storing the list of auto playlists
-    self.navStaticPlaylists = ko.observableArray();     // Used for storing the list of static playlists
+    self.staticPlaylistEdit = ko.observable(null);  // The static playlist that's on the editing table
+    self.autoPlaylistEdit = ko.observable(null);    // The auto playlist that's on the editing table
+
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
-
-    self.shuffleEnabled = ko.observable(false);         // Used to show if the shuffled mode is enabled or not
-    self.repeatEnabled = ko.observable(false);          // Used to show if the repeat mode is enabled or not
 
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
@@ -272,27 +271,12 @@ function ViewModel() {
     self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
-    self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
+    self.selectedTracks = ko.observableArray([]);       // The list of tracks that are selected. Should be reset when active pane changes
     self.dragging = false;
-    self.playing = ko.observable(false);                        // Whether or not there are tracks playing
-    self.playingVolume = 1;                                     // The volume to play
-    self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
-    self.playingTrack = ko.observable({Metadata: {}, Id: 0});   // The playing track (the blank obj is to keep null errors at bay)
-    self.playingArt = ko.observable(null);                      // The Href for the currently playing album art
-    self.playingAudioObject = null;                             // The currently playing audio object
-    self.playingProgress = ko.observable(0);                    // The played percentage of the track
-    self.playingProgressTime = ko.observable(0);                // The time played
-    self.playingQueue = ko.observableArray();                   // The queue of tracks to be played immediately after the current track
-    self.playingScrubberEnabled = true;                         // Whether the scrubber movement is enabled. It will be disabled when dragging is happening.
 
-    self.playlistAddModalVisible = ko.observable(false);        // Whether or not the add playlist modal is visible (false|"auto"|"static")
-    self.playlistAddName = ko.observable(null);                 // The name for the new playlist
-    self.playlistAddRules = ko.observableArray([new AutoPlaylistRule()]); // A list of rules that will be part of the auto playlist
-    self.playlistAddAnyAll = ko.observable("all");              // Whether all or any of the rules are to be met
-    self.playlistAddApplyLimit = ko.observable(false);          // Whether or not the autoplaylist will have a limiter
-    self.playlistAddLimitCount = ko.observable(10);             // The number of tracks to limit the autoplaylist to
-    self.playlistAddLimitField = ko.observable(null);           // The field to sort the autoplaylist by
-    self.playlistAddLimitDesc = ko.observable(false);           // Whether or not to sort the autoplaylist descending
+    self.playback = ko.observable(new PlaybackViewModel());
+
+    self.playingPane = ko.observable(null);                     // The pane that the current playing track is from
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
@@ -315,9 +299,9 @@ function ViewModel() {
 
     self.bootRequests = function() {
         // Ajax requests
-        self.loadAutoPlaylists();
-        self.loadStaticPlaylists();
-        self.loadTrackLibrary(true);
+        self.fetchAutoPlaylists();
+        self.fetchStaticPlaylists();
+        self.fetchTracks();
 
         // Session storage lookups
         if(localStorage.getItem(settingsStorageKey) != null) {
@@ -325,71 +309,66 @@ function ViewModel() {
         }
     };
 
-    self.loadAutoPlaylists = function() {
+    self.fetchAutoPlaylists = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/auto/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
-        }
+        };
         params.success = function(jqXHR) { // Store the auto playlists
-            self.navAutoPlaylists(jqXHR);
-        }
+            self.autoPlaylists(jqXHR.map(function(item) {
+                var pvm = new PlaylistViewModel("auto");
+                pvm.Id = item.Id;
+                pvm.Href = item.Href;
+                pvm.Name(item.Name);
+                return pvm;
+            }));
+        };
         $.ajax(params);
     };
 
-    self.loadStaticPlaylists = function() {
+    self.fetchStaticPlaylists = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
-        }
-        params.success = function(jqXHR) { // Store the auto playlists
-            self.navStaticPlaylists(jqXHR);
-        }
-        $.ajax(params);
-    };
-
-    self.loadPlaylist = function(type, playlist) {
-        // Set up the parameters in case we need to look it up
-        var params = getBaseAjaxParams("GET", serverAddress + playlist.Href);
-        params.error = function(jqXHR) { // Show error message
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup playlist for unknown reason.");
         };
-
-        if(type == "static") {
-            // Check for the playlist in the cache
-            if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist("static", self.staticPlaylists[playlist.Id]);
-                return;
-            } else {
-                params.success = function(jqXHR) { // Cache the playlist
-                    self.staticPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist("static", jqXHR);
-                };
-            }
-        } else {
-            // Check for the playlist in the cache
-            if(typeof self.autoPlaylists[playlist.Id] !== "undefined") {
-                self.showPlaylist("auto", self.autoPlaylists[playlist.Id]);
-                return;
-            } else {
-                params.success = function(jqXHR) { // Cache the playlist
-                    self.autoPlaylists[jqXHR.Id] = jqXHR;
-                    self.showPlaylist("auto", jqXHR);
-                };
-            }
-        }
+        params.success = function(jqXHR) { // Store the static playlists
+            // Generate view-models for the playlists and show them in the nav bar
+            self.staticPlaylists(jqXHR.map(function(item) {
+                var pvm = new PlaylistViewModel("static");
+                pvm.Id = item.Id;
+                pvm.Href = item.Href;
+                pvm.Name(item.Name);
+                return pvm;
+            }));
+        };
         $.ajax(params);
     };
 
-    self.loadTrackLibrary = function(setVisible) {
+    self.loadPlaylist = function(playlist) {
+        if(playlist.Loaded) {
+            self.showPlaylist(playlist);
+        } else {
+            playlist.fetch(self.showPlaylist, self.generalError);
+        }
+    };
+
+    self.fetchTracks = function() {
         var params = getBaseAjaxParams("GET", serverAddress + "tracks/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
         };
-        params.success = function(jqXHR) { // Store the tracks in the invisible library
-            for(var i = 0; i < jqXHR.length; ++i) {
-                self.trackLibrary[jqXHR[i].Id] = jqXHR[i];
-                if(setVisible) { self.trackVisibleTracks.push(jqXHR[i]); }
-            }
+        params.success = function(jqXHR) { // Store the tracks in the invisible library]
+            self.trackVisibleTracks(jqXHR.map(function(item) {
+                // Create new track view model
+                var newTrack = new TrackViewModel();
+                newTrack.Id = item.Id;
+                newTrack.Metadata = ko.observableDictionary(item.Metadata);
+
+                // Store in the track library
+                self.trackLibrary[item.Id] = newTrack;
+
+                return newTrack;
+            }));
         };
         $.ajax(params);
     };
@@ -410,302 +389,28 @@ function ViewModel() {
             self.infoTotalTracks(jqXHR.Count);
             self.infoTotalTime(calculateTimeVerbal(jqXHR.TotalTime));
             self.bootRequests();
-        }
+        };
         $.ajax(params);
     };
-
-    self.fetchAndPlayTrack = function(track) {
-        // Fetch the track if we don't have it
-        if(self.trackLibrary[track.Id].Qualities === null) {
-            var params = getBaseAjaxParams("GET", serverAddress + "tracks/" + track.Id);
-            params.error = function(jqXHR) {
-                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
-            }
-            params.success = function(jqXHR) {
-                // Store the track in the library cache
-                self.trackLibrary[jqXHR.Id] = jqXHR;
-                self.playTrack(self.trackLibrary[jqXHR.Id]);
-            }
-            $.ajax(params);
-        } else {
-            self.playTrack(self.trackLibrary[track.Id]);
-        }
-    };
-
-    self.submitStaticPlaylist = function() {
-        // Close the playlist modal
-        self.playlistAddModalVisible(false);
-
-        // Send an ajax request to add the static playlist
-        var params = getBaseAjaxParams("POST", serverAddress + "playlists/static/");
-        params.data = JSON.stringify({Name: self.playlistAddName()});
-        params.error = function(jqXHR) {
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
-        }
-        params.success = function(response) {
-            // Add the playlist to the list of playlists
-            var newPlaylist = {
-                Href: "playlists/static/" + response.Guid,
-                Name: self.playlistAddName(),
-                Id: response.Guid
-            };
-            self.navStaticPlaylists.push(newPlaylist);
-
-            // Sort it real quick
-            self.navStaticPlaylists.sort(sortPlaylistsByName);
-
-            // Clear out the modal stuff
-            self.playlistAddName(null);
-        };
-
-        $.ajax(params);
-    };
-
-    self.submitAutoPlaylist = function() {
-        // Build a request
-        // TODO: Check that the request is valid
-        var newPlaylist = {
-            Name: self.playlistAddName(),
-            Limit: !self.playlistAddApplyLimit() ?  // Limiter is optional
-                null :
-                {
-                    Limit: self.playlistAddLimitCount(),
-                    SortField: self.playlistAddLimitField().TagName,
-                    SortDescending: self.playlistAddLimitField() != null ? self.playlistAddLimitDesc() : null   // Descending is optional param
-                },
-            MatchAll: self.playlistAddAnyAll() == 'all',
-            Rules: $.map(self.playlistAddRules(), function(element) {
-                return {Field: element.metadataField().TagName, Comparison: element.comparison().Name, Value: element.value() }
-            })
-        };
-
-        // Send the request
-        var params = getBaseAjaxParams("POST", serverAddress + "playlists/auto/");
-        params.data = JSON.stringify(newPlaylist);
-        params.error = function(jqXHR) {
-            self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to create playlist for unknown reason.");
-        }
-        params.success = function(response) {
-            // Add the playlist to the list of playlists
-            var playlist = {
-                Href: "playlists/auto/" + response.Guid,
-                Name: self.playlistAddName(),
-                Id: response.Guid
-            };
-            self.navAutoPlaylists.push(playlist);
-
-            // Sort the list real quick
-            self.navAutoPlaylists.sort(sortPlaylistsByName);
-
-            // Clear out the form and select the playlist
-            self.visiblePane("tracks");
-            self.loadPlaylist("auto", playlist);
-        };
-
-        $.ajax(params);
-    };
-
-    self.addSelectedTracksToPlaylist = function(playlist) {
-        // TODO: Do this with a single batch call when Dolomite supports it
-        self.selectedTracks.forEach(function(item) {
-            // Build a request to add the tracks
-            var params = getBaseAjaxParams("POST", serverAddress + playlist.Href);
-            params.error = params.error = function(jqXHR) {
-                self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
-            };
-            params.success = function(response) {
-                // Add the tracks to the playlist if the playlist has already been loaded
-                if(typeof self.staticPlaylists[playlist.Id] !== "undefined") {
-                    self.staticPlaylists[playlist.Id].Tracks.push(item);
-                }
-                if(playlist.Tracks !== null) {
-                    playlist.Tracks.push(item);
-                }
-            }
-            params.data = item.Id;
-            $.ajax(params);
-        });
-    }
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.manualPlay = function(fromQueue, track) {
-        // Build the now playing list from the existing playlist
-        self.nowPlayingList = [];
-        for(var i = 0; i < self.trackVisibleTracks().length; ++i) {
-            self.nowPlayingList.push(self.trackVisibleTracks()[i]);
-            self.nowPlayingListSorted.push(self.trackVisibleTracks()[i]);
-        }
-
-        // Do we need to shuffle the playlist?
-        fromQueue = typeof fromQueue !== 'undefined' ? fromQueue : false;
-        if(fromQueue) {
-            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-                // Shuffle the track list
-                self.nowPlayingList = self.nowPlayingList.shuffle();
-                self.nowPlayingIndex = -1;
-            } else {
-                // Set the current track index to -1 to start at beginning of list when track finishes
-                self.nowPlayingIndex = -1;
-            }
-        } else {
-            if(self.shuffleEnabled() && self.settings.shuffleMode == 'order') {
-                // Shuffle an re-add the original track to the top of the list
-                self.nowPlayingList = self.nowPlayingList.shuffle();
-                self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(track), 0)
-                self.nowPlayingIndex = 0;
-            } else {
-                self.nowPlayingIndex = self.nowPlayingList.indexOf(track);
-            }
-        }
-
-        // Set the playing pane
-        self.playingPane(self.visiblePane());
-
-        // Fetch/play the first track
-        self.fetchAndPlayTrack(track);
-    }
-
-    self.startPlayback = function() {
-        // If there are track enqueued, play the one at the top
-        if(self.playingQueue().length > 0) {
-            self.manualPlay(true, self.playingQueue.shift());
-            return;
-        }
-
-        // Play from the start of the list, or pick a random track if shuffle is enabled
-        if(self.shuffleEnabled()) {
-            // Grab a random track and manually play it
-            var randomIndex = Math.floor(Math.random() * (self.trackVisibleTracks().length-1));
-            self.manualPlay(false, self.trackVisibleTracks()[randomIndex]);
-        } else {
-            self.manualPlay(false, self.trackVisibleTracks()[0]);
-        }
-    }
-
-    self.nextTrack = function() {
-        // If there's a track in the queue that needs to be played, play it nao!
-        if(self.playingQueue().length > 0) {
-            self.fetchAndPlayTrack(self.playingQueue.shift());
-
-            // Remove the track from the top of the queue if the queue is visible
-            if(self.visiblePane() == 'queue') {
-                self.trackVisibleTracks.shift();
-            }
-            return;
-        }
-
-        // If we're on random shuffle, just pick another track and keep going
-        if(self.shuffleEnabled() && self.settings().shuffleMode == 'random') {
-            self.nowPlayingIndex = Math.floor(Math.random() * (self.nowPlayingList.length-1));
-        } else {
-            // Are we at the end of the now playing
-            self.nowPlayingIndex++;
-            if(self.nowPlayingIndex >= self.nowPlayingList.length) {
-                // At the end of the list, do we repeat?
-                if(self.repeatEnabled()) {
-                    // Loop back to the beginning
-                    self.nowPlayingIndex = 0;
-                } else {
-                    // Nope. We're done.
-                    self.playingAudioObject.pause();
-                    self.playing(false);
-                    self.playingTrack({Metadata:{}});
-                    return;
-                }
-            }
-        }
-
-        // Load the next track
-        self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
-    }
-
-    self.previousTrack = function() {
-        // Are we past 2% of the track?
-        if(self.playingAudioObject.currentTime / self.playingAudioObject.duration * 100 >= 2 ) {
-            // Reset the current time to 0
-            self.playingAudioObject.currentTime = 0;
-        } else {
-            // Are we at the beginning of the now playing list
-            self.nowPlayingIndex--;
-            if(self.nowPlayingIndex < 0) {
-                // At the beginning of the now playing list. Do we loop around?
-                if(self.repeatEnabled()) {
-                    // Loop back to the end of the list
-                    self.nowPlayingIndex = self.nowPlayingList.length - 1;
-                } else {
-                    // Nope we're done.
-                    self.playingAudioObject.pause();
-                    self.playing(false);
-                    return;
-                }
-            }
-
-            // Load the previous track
-            self.fetchAndPlayTrack(self.nowPlayingList[self.nowPlayingIndex]);
-        }
-    }
-
-    self.playTrack = function(track) {
-        // Which audio quality should be played? Count down from the top to get the highest quality that doesn't exceed the preferences
-        var trackQuality;
-        for(var q = self.settings().quality; q >= 0; --q) {
-            if(typeof track.Qualities[q] !== "undefined") {
-                trackQuality = track.Qualities[q];
-                break;
-            }
-        }
-
-        // Create an audio thing if needed
-        if(self.playingAudioObject !== null) {
-            self.playingAudioObject.src = serverAddress + trackQuality.Href;
-        } else {
-            self.playingAudioObject = new Audio(serverAddress + trackQuality.Href);
-            self.playingAudioObject.volume = self.playingVolume;
-            self.playingAudioObject.ontimeupdate = function(e) {
-                // Update the numeric time
-                var time = e.target.currentTime;
-                self.playingProgressTime(calculateTrackTime(time));
-
-                // Update the scrubber percentage
-                if(self.playingScrubberEnabled) {
-                    var percent = time / e.target.duration * 100;
-                    self.playingProgress(percent);
-                    if(percent >= 90) { // If we're almost at the end, change the scrubber handle to prevent it from jumping to the next line
-                        $("#playedHandle").addClass("end");
-                    }
-                }
-            }
-            self.playingAudioObject.onended = function(e) {
-                // Jump to the next track
-                self.nextTrack();
-            }
-        }
-
-        // Start that shit up!
-        $("#playedHandle").removeClass("end");
-        self.playing("playing");
-        self.playingArt(serverAddress + track.ArtHref);
-        self.playingTrack(track);
-        self.playingProgressTime(calculateTrackTime(0));
-        self.playingProgress(0);
-        self.playingAudioObject.play();
-    }
-
     self.enqueueTrack = function(track) {
-        self.playingQueue.push(track);
+        // Pass the request to the playback vm
+        self.playback().enqueueTrack(track);
     };
 
-    self.dequeueTrack = function(track) {
-        self.trackVisibleTracks.remove(track);
-        self.playingQueue.remove(track);
+    self.dequeueTrack = function(index) {
+        // Remove the track from the visible queue, then pass the call to the playback vm
+        self.trackVisibleTracks.splice(index(), 1);
+        self.playback().dequeueTrack(index);
     };
 
-    self.showPlaylist = function(type, playlist) {
+    self.showPlaylist = function(playlist) {
         // Set the visible pane
-        self.visiblePane(type + playlist.Id);
+        self.visiblePane(playlist.Type + playlist.Id);
 
         // Clean out the visible tracks and add the playlist's tracks
-        self.trackVisibleTracks($.map(playlist.Tracks, function(e) {
+        self.trackVisibleTracks($.map(playlist.Tracks(), function(e) {
             return self.trackLibrary[e]
         }));
 
@@ -718,9 +423,10 @@ function ViewModel() {
         self.visiblePane("queue");
 
         // Clear out the current visible tracks and make the queue visible
-        self.trackVisibleTracks($.map(self.playingQueue(), function(e) {
-            return self.trackLibrary[e.Id]
-        }));
+        self.trackVisibleTracks(self.playback().queue);
+
+        // Clear the selection
+        self.clearSelection();
     };
 
     self.showAllTracks = function() {
@@ -737,57 +443,9 @@ function ViewModel() {
         self.trackVisibleTracks($.map(keys, function(e) {
             return self.trackLibrary[e];
         }));
+
+        self.clearSelection();
     };
-
-    self.togglePlayback = function() {
-        if(self.playing() === false) {
-            self.startPlayback();
-        } else {
-            if(self.playingAudioObject.paused) {
-                self.playingAudioObject.play();
-                self.playing("playing");
-            } else {
-                self.playingAudioObject.pause();
-                self.playing("paused");
-            }
-        }
-    }
-
-    self.toggleShuffle = function() {
-        if(self.shuffleEnabled()) {
-            // Turn off shuffling
-            self.shuffleEnabled(false);
-
-            // Copy the sorted list back into the now playing list
-            self.nowPlayingList = [];
-            for(var i = 0; i < self.nowPlayingListSorted.length; ++i) {
-                self.nowPlayingList.push(self.nowPlayingListSorted[i]);
-            }
-            self.nowPlayingIndex = self.nowPlayingList.indexOf(self.playingTrack());
-        } else {
-            // Turn on shuffling
-            self.shuffleEnabled(true);
-            self.nowPlayingList = self.nowPlayingList.shuffle();
-            self.nowPlayingList = self.nowPlayingList.move(self.nowPlayingList.indexOf(self.playingTrack()), 0);
-            self.nowPlayingIndex = 0;
-        }
-    }
-
-    self.toggleRepeat = function() {
-        self.repeatEnabled(!self.repeatEnabled());
-    }
-
-    self.scrubberClick = function(vmodel, event) {
-        // Get x offset of the click
-        var x = event.pageX - $(event.target).offset().left;
-        var $scrubber = $(event.target).attr('id') == 'scrubber' ? $(event.target) : $(event.target).parent();
-
-        // Calculate and set the new time for the audio playback
-        var trackDuration = vm.viewModel.playingAudioObject.duration;
-        var length = parseInt($scrubber.css("width").replace("px", ""));
-        var newTime = trackDuration * x / length;
-        vm.viewModel.playingAudioObject.currentTime = newTime;
-    }
 
     self.trackHover = function(action, model, event) {
         // If we're dragging, don't do ANYTHING!
@@ -810,7 +468,7 @@ function ViewModel() {
 
     self.showSettings = function() {
         self.settingsVisible(true);
-    }
+    };
 
     self.saveSettings = function() {
         // Hide the settings box
@@ -818,91 +476,112 @@ function ViewModel() {
 
         localStorage.setItem(settingsStorageKey, JSON.stringify(self.settings()));
         // @TODO: Write these to the server
-    }
+    };
 
-    self.showAddStaticPlaylist = function() {
-        self.playlistAddModalVisible('static');
+    self.addStaticPlaylist = function() {
+        var playlist = new PlaylistViewModel("static");
+        playlist.Created = false;
+        self.staticPlaylistEdit(playlist);
     };
 
     self.showAddAutoPlaylist = function() {
+        // Create a blank playlist and set some defaults
+        var newPlaylist = new PlaylistViewModel("auto");
+        newPlaylist.Created = false;
+        newPlaylist.MatchAll(true);
+        newPlaylist.LimitCount(10);
+        newPlaylist.LimitDesc(false);
+        newPlaylist.Rules([new AutoPlaylistRule()]);
+
+        // Show the form
+        self.autoPlaylistEdit(newPlaylist);
         self.visiblePane("addAutoPlaylist");
-    }
+    };
 
     self.cancelAutoPlaylist = function() {
-        // Clear out the values
-        self.playlistAddName(null);
-        self.playlistAddRules([new AutoPlaylistRule()]);
-        self.playlistAddAnyAll("all");
-        self.playlistAddApplyLimit(false);
-        self.playlistAddLimitField(null);
-        self.playlistAddLimitCount(10);
-        self.playlistAddLimitDesc(false);
+        // Clear out the new autoplaylist
+        self.autoPlaylistEdit(null);
 
         // Reset the view
         self.visiblePane("tracks");
-    }
+    };
 
-    self.autoPlaylistAddRule = function() {
-        // Create a blank rule and add it to the list
-        self.playlistAddRules.push(new AutoPlaylistRule());
-    }
-
-    self.autoPlaylistRemoveRule = function(rule) {
-        // Drop it like its hot
-        self.playlistAddRules.remove(rule);
-    }
-
-    self.selectTrack = function(track, event) {
+    self.selectTrack = function(index, event) {
         if(event.ctrlKey || event.metaKey) {
             // Add the track if it hasn't already been added
-            if(self.selectedTracks.indexOf(track) < 0) {
-                self.selectedTracks.push(track);
-                $("#row" + track.Id).addClass("selected");
+            if(self.selectedTracks.indexOf(index) < 0) {
+                self.selectedTracks.push(index);
             }
-        } else if(event.shiftKey && self.selectedTracks.length > 0) {
-            // Reset the selected list with the range of tracks from the first selected track to the clicked track
-            var firstIndex = self.trackVisibleTracks.indexOf(self.selectedTracks[0]);
-            var lastIndex  = self.trackVisibleTracks.indexOf(track);
-            var selectedSubset;
-            if(lastIndex > firstIndex) {
-                selectedSubset = self.trackVisibleTracks.slice(firstIndex, lastIndex + 1);
-            } else {
-                selectedSubset = self.trackVisibleTracks.slice(lastIndex, firstIndex + 1);
+        } else if(event.shiftKey && self.selectedTracks().length > 0) {
+            // Find the range of indices from the first selected track to the clicked track
+            var firstIndex = self.selectedTracks()[0];
+            var lastIndex  = index;
+            if(firstIndex > lastIndex) {
+                // Swap them, they're backwards
+                var temp = firstIndex;
+                firstIndex = lastIndex;
+                lastIndex = temp;
             }
+
+            // Reset the list
             self.clearSelection();
-            ko.utils.arrayForEach(selectedSubset, function(item) {
-                $("#row" + item.Id).addClass("selected");
-                self.selectedTracks.push(item);
-            });
+
+            // Generate the range of selected indices
+            for(var i = firstIndex; i <= lastIndex; i++) {
+                self.selectedTracks.push(i);
+            }
         } else {
             // Reset the selected list with clicked track
-            self.selectedTracks = [track];
-            $("tr.selected").removeClass("selected");
-            $("#row" + track.Id).addClass("selected");
+            self.clearSelection();
+            self.selectedTracks.push(index);
         }
     };
 
     self.clearSelection = function() {
-        $("tr.selected").removeClass("selected");
-        self.selectedTracks = [];
+        self.selectedTracks.removeAll();
     };
-}
 
-function AutoPlaylistRule() {
-    var self = this;
+    self.createPlaylistSuccess = function(playlist) {
+        // Add the playlist to the proper list and sort it
+        var playlistList = playlist.Type == "static" ? self.staticPlaylists : self.autoPlaylists;
+        playlistList.push(playlist);
+        playlistList.sort(PlaylistViewModel.sortByName);
 
-    // DATA ////////////////////////////////////////////////////////////////
+        // Clear out the playlist for edit
+        self.staticPlaylistEdit(null);
+    };
 
-    self.metadataField = ko.observable();
-    self.value = ko.observable();
-    self.comparison = ko.observable();
-    self.comparisonOptions = ko.observableArray();
+    self.volumeDragStart = function() {
+        // Prevent the volume dropdown from sliding back up
+        $(this).parent().parent().addClass("locaked");
+    };
 
-    // ACTIONS /////////////////////////////////////////////////////////////
-    self.metadataField.subscribe(function() {
-        self.comparisonOptions = ko.observableArray(metadataComparisons[self.metadataField().Type]);
-        self.comparison(null);
-    })
+    self.volumeDragDrag = function(event, ui) {
+        // Calculate the volume
+        var height = parseInt($("#volumeSlider").css("height").replace("px", ""));
+        var newVol = (height - ui.position.top) / height;
+
+        // TODO: Store the volume in the settings
+
+        // Change the volume in the playback viewmodel
+        self.playback().setVolume(newVol);
+    };
+
+    self.volumeDragStop = function() {
+        // Allow the volume dropdown to hide itself
+        $(this).parent().parent().removeClass("locked");
+    };
+
+    // DOCUMENT READY HANDLES //////////////////////////////////////////////
+    $(document).ready(function() {
+        $("#volumeHandle").draggable({
+            axis: "y",
+            containment: "parent",
+            start: self.volumeDragStart,
+            drag: self.volumeDragDrag,
+            stop: self.volumeDragStop
+        });
+    });
 }
 
 // Activates knockout.js
@@ -923,56 +602,5 @@ $(document).ready(function() {
         // We have no idea who logged in. We need to show the login form.
         vm.viewModel.loginLoggedIn(false);
     }
-
-    // Make the scrubber draggable
-    $("#playedHandle").draggable({
-        axis: "x",
-        containment: "parent",
-        start: function() {
-            // Disable the scrubber updating
-            vm.viewModel.playingScrubberEnabled = false;
-        },
-        stop: function(event, ui) {
-            // Calculate the offset into the track to set
-            var trackDuration = vm.viewModel.playingAudioObject.duration;
-            var length = parseInt($("#scrubber").css("width").replace("px",""));
-            var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
-
-            // Set the current time on the audio object
-            vm.viewModel.playingAudioObject.currentTime = newTime;
-
-            // Start the scrubber up again
-            vm.viewModel.playingScrubberEnabled = true;
-
-            // Move the handle back to where it belongs
-            $("#playedHandle").css("top", "").css("left", "");
-        }
-    });
-
-    // Make the volume handle draggable
-    $("#volumeHandle").draggable({
-        axis: "y",
-        containment: "parent",
-        start: function(event, ui) {
-            $(this).parent().parent().addClass("locked");
-        },
-        drag: function(event, ui) {
-            // Calculate the volume
-            var height = parseInt($("#volumeSlider").css("height").replace("px", ""));
-            var newVol = (height - ui.position.top) / height;
-            //newVol = newVol * 100 < 1 ? newVol = 0 : newVol;
-
-            // If there's a playing audio thingy, change the volume
-            if(vm.viewModel.playingAudioObject != null) {
-                vm.viewModel.playingAudioObject.volume = newVol;
-            }
-
-            // Set the volume in the state anyhow if it's not playing
-            vm.viewModel.playingVolume = newVol;
-        },
-        stop: function(){
-            $(this).parent().parent().removeClass("locked");
-        }
-    });
 });
 

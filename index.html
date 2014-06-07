@@ -5,12 +5,13 @@
     <script src='scripts/jquery-2.1.0.min.js' type='text/javascript'></script>
     <script src='scripts/jquery-ui-1.10.4.custom.min.js' type='text/javascript'></script>
     <script src='scripts/knockout-3.0.0.js' type='text/javascript'></script>
+    <script src='scripts/ko.observableDictionary.js' type='text/javascript'></script>
     <link href='style/source_sans.css' rel='stylesheet' type='text/css' />
     <link href="style/style.css" rel="stylesheet" type='text/css'/>
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || playlistAddModalVisible() == 'static'">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || staticPlaylistEdit() != null">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -22,12 +23,13 @@
             <button data-bind="click: loginSubmitLogin">Login</button>
         </form>
     </div>
-    <div id='addPlaylistModal' class='modal' data-bind="visible: playlistAddModalVisible() == 'static'">
+    <div id='addPlaylistModal' class='modal' data-bind="visible: staticPlaylistEdit() != null, with: staticPlaylistEdit">
         <form>
-            <h1>Add Playlist</h1>
+            <h1><span data-bind="if: Created">Edit </span><span data-bind="ifnot: Created">Add</span> Playlist</h1>
             <label for='playlistName'>Playlist Name:</label>
-            <input type='text' id='playlistName' data-bind="value: playlistAddName" />
-            <button data-bind="click: submitStaticPlaylist">Add Playlist</button>
+            <input type='text' id='playlistName' data-bind="value: Name" />
+            <button data-bind="visible: Created, click: createPlaylist">Edit Playlist</button>
+            <button data-bind="visible: !Created, click: function() { $data.createPlaylist($root.createPlaylistSuccess, $root.generalError) }">Add Playlist</button>
         </form>
     </div>
     <div id='settingsModal' class='modal' data-bind="visible: settingsVisible()">
@@ -74,11 +76,11 @@
     <div id='logo'>
         <img src='img/logo.png' title="Cinnabar on Dolomite" />
     </div>
-    <div id='playControls'>
+    <div id='playControls' data-bind="with: playback">
         <div class='button small' data-bind="click: previousTrack">
             <img src='img/back.png' alt='back' title='Previous Track' data-bind="visible: playing()" />
         </div>
-        <div class='button large' data-bind="click: togglePlayback">
+        <div class='button large' data-bind="click: togglePlayback.bind($data, $root.trackVisibleTracks())">
             <img src='img/pause.png' alt='pause' title='Play/Pause' data-bind="visible: playing() == 'playing'" />
             <img src='img/play.png' alt='play' title='Play/Pause' data-bind="visible: playing() == 'paused' || !playing()"/>
         </div>
@@ -86,24 +88,24 @@
             <img src='img/forward.png' alt='forward' title='Next Track' data-bind="visible: playing()" />
         </div>
     </div>
-    <div id='playSlider'>
+    <div id='playSlider' data-bind="with: playback">
         <div id='scrubber' data-bind="visible: playing(), click: scrubberClick">
-            <div id='played' data-bind="style:{width: playingProgress() + '%'}"></div>
+            <div id='played' data-bind="style:{width: progress() + '%'}"></div>
             <div id='playedHandle'></div>
         </div>
-        <div id='playInfo' data-bind="visible: playing()">
+        <div id='playInfo' data-bind="with: track">
             <div id='trackInfo'>
-                <span data-bind="text: playingTrack().Metadata.Title"></span> |
-                <span data-bind="text: playingTrack().Metadata.Artist"></span> |
-                <span data-bind="text: playingTrack().Metadata.Album"></span>
+                <span data-bind="text: Metadata.get('Title')"></span> |
+                <span data-bind="text: Metadata.get('Artist')"></span> |
+                <span data-bind="text: Metadata.get('Album')"></span>
             </div>
             <div id='timeInfo'>
-                <span data-bind="text: playingProgressTime"></span> /
-                <span data-bind="text: calculateTrackTime(playingTrack().Metadata.Duration)"></span>
+                <span data-bind="text: $parent.progressTime"></span> /
+                <span data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></span>
             </div>
         </div>
     </div>
-    <div id='listControls'>
+    <div id='listControls' data-bind="with: playback">
         <div class='button small' data-bind="click: toggleShuffle">
             <img src='img/shuffle_selected.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: shuffleEnabled()"/>
             <img src='img/shuffle.png' alt='shuffle' title='Shuffle On/Off' data-bind="visible: !shuffleEnabled()" />
@@ -129,11 +131,11 @@
 </div>
 <div id='mainPane'>
     <div id='leftBar'>
-        <div id='navBar' data-bind="css:{playing: playing() != false}">
+        <div id='navBar' data-bind="css:{playing: playback().playing() != false}">
             <ul>
-                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue', hidden: playingQueue().length == 0}">
+                <li class='selectable' data-bind="click:showQueue, css:{selected: visiblePane() == 'queue', hidden: playback().queue().length == 0}">
                     Queue
-                    [<span data-bind="text: playingQueue().length"></span>]
+                    [<span data-bind="text: playback().queue().length"></span>]
                 </li>
                 <li class='selectable' data-bind="click: showAllTracks, css:{selected: visiblePane() == 'tracks'}">Tracks</li>
                 <li class='selectable' data-bind="css:{selected: visiblePane() == 'artists'}">Artists</li>
@@ -144,26 +146,28 @@
                     <button class='addButton' title='Add Auto Playlist' data-bind="click: showAddAutoPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
-                    <ul data-bind="foreach: navAutoPlaylists()">
-                        <li class='selectable' data-bind="text: Name, click: $root.loadPlaylist.bind($data, 'auto'), css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
+                    <ul data-bind="foreach: autoPlaylists">
+                        <li class='selectable' data-bind="text: Name,
+                                                          click: $root.loadPlaylist,
+                                                          css:{selected: $root.visiblePane() == 'auto' + Id}"></li>
                     </ul>
                 </li>
                 <li>
                     Playlists
-                    <button class='addButton' title='Add Playlist' data-bind="click: showAddStaticPlaylist">
+                    <button class='addButton' title='Add Playlist' data-bind="click: addStaticPlaylist">
                         <img src='img/plus.png' alt='+' />
                     </button>
-                    <ul data-bind="foreach: navStaticPlaylists()">
+                    <ul data-bind="foreach: staticPlaylists">
                         <li class='selectable' data-bind="text: Name,
-                                                          click: $root.loadPlaylist.bind($data, 'static'),
+                                                          click: $root.loadPlaylist,
                                                           css:{selected: $root.visiblePane() == 'static' + Id},
                                                           dropTrack: {vm: $root, playlist: $data}"></li>
                     </ul>
                 </li>
             </ul>
         </div>
-        <div id='albumArt' data-bind="visible: playing() != false && playingTrack().ArtHref != null">
-            <img data-bind="attr:{src: playingTrack().ArtHref != null ? playingArt() : ''}" />
+        <div id='albumArt' data-bind="with: playback().track">
+            <img data-bind="attr:{src: ArtHref}" />
         </div>
     </div>
     <div id='infoBar' style='height:48px; background-color:#0055d4;'>
@@ -175,14 +179,14 @@
         <input type='text' placeholder="Search Tracks"/>
     </div>
     <div id='autoPlaylistPane' class='pane' data-bind="visible: visiblePane() == 'addAutoPlaylist'">
-        <form>
+        <form data-bind="with: autoPlaylistEdit">
             <h1>Add Auto Playlist</h1>
             <div class='row'>
                 <div class='colLeft tall'>
                     <label for='aPlaylistName'>Playlist Name:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='text' id='aPlaylistName' data-bind="value: playlistAddName" />
+                    <input type='text' id='aPlaylistName' data-bind="value: Name" />
                 </div>
             </div>
             <div class='row'>
@@ -197,35 +201,38 @@
                             <th style='width: 7%'></th>
                         </tr>
                         </thead>
-                        <tbody data-bind="foreach: playlistAddRules">
+                        <tbody data-bind="foreach: Rules">
                         <tr>
                             <td>
-                                <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Select...', value: metadataField"></select>
+                                <select data-bind="options: metadataFields,
+                                                   optionsText: 'DisplayName',
+                                                   optionsCaption: 'Select...',
+                                                   value: metadataField"></select>
                             </td>
                             <td data-bind="with: metadataField">
-                                <select data-bind="options: $parent.comparisonOptions, optionsText: 'DisplayName', optionsCaption: 'Select...', value: $parent.comparison"></select>
+                                <select data-bind="options: $parent.comparisonOptions,
+                                                   optionsText: 'DisplayName',
+                                                   optionsCaption: 'Select...',
+                                                   value: $parent.comparison"></select>
                             </td>
                             <td data-bind="with: comparison">
                                 <input type='text' data-bind="value: $parent.value"/>
                             </td>
                             <td class='centerText'>
-                                <a href='#' data-bind="click: $root.autoPlaylistRemoveRule"><img src='img/trash.png' alt='Remove' /></a>
+                                <a href='#' data-bind="click: function() { $parent.removeRule($data) }"><img src='img/trash.png' alt='Remove' /></a>
                             </td>
                         </tr>
                         </tbody>
                     </table>
-                    <button data-bind="click: autoPlaylistAddRule" style='margin-top: 7px;'>Add Rule</button>
+                    <button data-bind="click: function() { $data.addRule(); }" style='margin-top: 7px;'>Add Rule</button>
                 </div>
             </div>
             <div class='row'>
                 <div class='colLeft tall'>
-                    <label for='anyAll'>Match Mode:</label>
+                    <label for='anyAll'>Match All Rules:</label>
                 </div>
                 <div class='colRight'>
-                    <select name='anyAll' id='anyAll' data-bind="value: playlistAddAnyAll">
-                        <option value='any'>Any</option>
-                        <option value='all'>All</option>
-                    </select>
+                    <input type='checkbox' id='anyAll' data-bind="checked: MatchAll">
                 </div>
             </div>
             <div class='row'>
@@ -233,35 +240,38 @@
                     <label for='applyLimit'>Limit Matching Tracks:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='checkbox' id='applyLimit' data-bind="checked: playlistAddApplyLimit">
+                    <input type='checkbox' id='applyLimit' data-bind="checked: ApplyLimit">
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddApplyLimit">
+            <div class='row' data-bind="visible: ApplyLimit">
                 <div class='colLeft tall'>
                     <label for='limitCount'>Max Tracks:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='text' id='limitCount' data-bind="value: playlistAddLimitCount" style='width:164px;'>
+                    <input type='text' id='limitCount' data-bind="value: LimitCount" style='width:164px;'>
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddApplyLimit">
+            <div class='row' data-bind="visible: ApplyLimit">
                 <div class='colLeft tall'>
                     <label for='limitField'>Order By:</label>
                 </div>
                 <div class='colRight'>
-                    <select data-bind="options: metadataFields, optionsText: 'DisplayName', optionsCaption: 'Random', value: playlistAddLimitField" id='limitField'></select>
+                    <select data-bind="options: metadataFields,
+                                       optionsText: 'DisplayName',
+                                       optionsCaption: 'Random',
+                                       value: LimitField" id='limitField'></select>
                 </div>
             </div>
-            <div class='row' data-bind="visible: playlistAddLimitField() != null">
+            <div class='row' data-bind="visible: LimitField">
                 <div class='colLeft'>
                     <label for='limitDesc'>Descending Order:</label>
                 </div>
                 <div class='colRight'>
-                    <input type='checkbox' data-bind="checked: playlistAddLimitDesc" id='limitDesc' />
+                    <input type='checkbox' data-bind="checked: LimitDesc" id='limitDesc' />
                 </div>
             </div>
-            <button data-bind="click: submitAutoPlaylist">Add Playlist</button>
-            <button data-bind="click: cancelAutoPlaylist">Cancel</button>
+            <button data-bind="click: function() { $data.createPlaylist($root.createPlaylistSuccess, $root.generalError) }">Add Playlist</button>
+            <button data-bind="click: $root.cancelAutoPlaylist">Cancel</button>
         </form>
     </div>
     <div id='trackPane' data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static') || visiblePane() == 'queue'">
@@ -282,29 +292,30 @@
                 <tbody data-bind="foreach: trackVisibleTracks()">
                     <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'),
                                           mouseout: $root.trackHover.bind($data, 'end'),
-                                          dblclick: $root.manualPlay.bind($data, false),
-                                          click: $root.selectTrack
+                                          dblclick: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()),
+                                          click: function(data, event) { $root.selectTrack($index(), event) }
                                          },
                                    dblclickBubble: false,
                                    attr: {id: 'row' + $data.Id},
-                                   dragTrack: {vm: $root, track: $data}
+                                   dragTrack: {vm: $root, index: $index()},
+                                   css: {selected: $root.selectedTracks.indexOf($index()) >= 0}
                                    ">
                         <td class='playIndicator'>
-                            <span class='playIndicatorPlaying' data-bind="click: $root.manualPlay.bind($data, false), visible: $root.playingPane() == $root.visiblePane() && $root.playingTrack().Id == Id">
-                                <img src='img/play_small.png' alt='Play' title='Play'/>
+                            <span class='playIndicatorPlaying' data-bind="click: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()), visible: $root.playingPane() == $root.visiblePane() && $root.playback().track() && $root.playback().track().Id == Id">
+                                <img src='img/play_small.png' alt='Play' title='This track is playing'/>
                             </span>
-                            <span class='playIndicatorHover' data-bind="click: $root.manualPlay.bind($data, false), visible: $root.playingTrack().Id != Id">
+                            <span class='playIndicatorHover' data-bind="click: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()), visible: $root.playback().track() && $root.playback().track().Id != Id">
                                 <img src='img/play_small.png' alt='Play' title='Play' />
                             </span>
                         </td>
-                        <td data-bind="text: calculateTrackNumber(Metadata['Track Number'],Metadata['Disc Number'])"></td>
-                        <td data-bind="text: Metadata.Title"></td>
-                        <td data-bind="text: calculateTrackTime(Metadata.Duration)"></td>
-                        <td data-bind="text: Metadata.Artist"></td>
-                        <td data-bind="text: Metadata.Album"></td>
-                        <td data-bind="text: Metadata.Year"></td>
+                        <td data-bind="text: calculateTrackNumber(Metadata.get('Track Number')(),Metadata.get('Disc Number')())"></td>
+                        <td data-bind="text: Metadata.get('Title')"></td>
+                        <td data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></td>
+                        <td data-bind="text: Metadata.get('Artist')"></td>
+                        <td data-bind="text: Metadata.get('Album')"></td>
+                        <td data-bind="text: Metadata.get('Year')"></td>
                         <td>
-                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack">DQ</span>
+                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack.bind($data, $index)">DQ</span>
                             <span data-bind="visible: $root.visiblePane() != 'queue', click: $root.enqueueTrack">EQ</span>
                         </td>
                     </tr>
@@ -314,5 +325,9 @@
     </div>
 </div>
 </body>
+<script src='scripts/playlist.js' type="text/javascript"></script>
+<script src='scripts/playback.js' type="text/javascript"></script>
+<script src='scripts/autoplaylistrule.js' type="text/javascript"></script>
+<script src='scripts/track.js' type="text/javascript"></script>
 <script src='scripts/app.js' type='text/javascript'></script>
 </html>
