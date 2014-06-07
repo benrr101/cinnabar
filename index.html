@@ -75,7 +75,13 @@
     <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
                                                           style: {left: visibleContextMenuLeft() + 'px', top: visibleContextMenuTop() + 'px'}">
         <ul>
-            <li data-bind="click: enqueueTracks">Add to Queue</li>
+            <li data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static'),
+                           click: enqueueTracks">
+                Add to Queue
+            </li>
+            <li data-bind="visible: visiblePane() == 'queue', click: dequeueTracks">
+                Remove from Queue
+            </li>
             <li>Add to Playlist</li>
             <li>Edit Metadata</li>
             <li>Delete</li>
@@ -327,7 +333,7 @@
                         <td data-bind="text: Metadata.get('Album')"></td>
                         <td data-bind="text: Metadata.get('Year')"></td>
                         <td>
-                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack.bind($data, $index)">DQ</span>
+                            <!-- TODO: Put a handle for opening the context menu here -->
                         </td>
                     </tr>
                 </tbody>

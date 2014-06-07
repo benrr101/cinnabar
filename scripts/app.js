@@ -400,15 +400,17 @@ function ViewModel() {
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
     self.enqueueTracks = function() {
         // Pass the tracks to be enqueued to the playback view model
-        $.each(self.selectedTracks(), function(item) {
-            self.playback().enqueueTrack(self.trackVisibleTracks()[item]);
+        $.each(self.selectedTracks(), function() {
+            self.playback().enqueueTrack(self.trackVisibleTracks()[this]);
         });
     };
 
-    self.dequeueTrack = function(index) {
-        // Remove the track from the visible queue, then pass the call to the playback vm
-        self.trackVisibleTracks.splice(index(), 1);
-        self.playback().dequeueTrack(index);
+    self.dequeueTracks = function() {
+        // Remove all selected track from the visible queue, then pass the call to the playback vm
+        $.each(self.selectedTracks(), function() {
+            self.trackVisibleTracks.splice(this, 1);
+            self.playback().dequeueTrack(this);
+        });
     };
 
     self.showPlaylist = function(playlist) {
