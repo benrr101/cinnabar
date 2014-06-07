@@ -265,7 +265,7 @@ function ViewModel() {
     self.infoTotalTracks = ko.observable(0);                    // How many tracks are visible
     self.infoTotalTime = ko.observable(0);                      // How long the visible tracks last
 
-    self.selectedTracks = [];                                   // The list of tracks that are selected. Should be reset when active pane changes
+    self.selectedTracks = ko.observableArray([]);       // The list of tracks that are selected. Should be reset when active pane changes
     self.dragging = false;
 
     self.playback = ko.observable(new PlaybackViewModel());
@@ -418,6 +418,9 @@ function ViewModel() {
 
         // Clear out the current visible tracks and make the queue visible
         self.trackVisibleTracks(self.playback().queue);
+
+        // Clear the selection
+        self.clearSelection();
     };
 
     self.showAllTracks = function() {
@@ -434,6 +437,8 @@ function ViewModel() {
         self.trackVisibleTracks($.map(keys, function(e) {
             return self.trackLibrary[e];
         }));
+
+        self.clearSelection();
     };
 
     self.trackHover = function(action, model, event) {
@@ -495,39 +500,39 @@ function ViewModel() {
         self.visiblePane("tracks");
     };
 
-    self.selectTrack = function(track, event) {
+    self.selectTrack = function(index, event) {
         if(event.ctrlKey || event.metaKey) {
             // Add the track if it hasn't already been added
-            if(self.selectedTracks.indexOf(track) < 0) {
-                self.selectedTracks.push(track);
-                $("#row" + track.Id).addClass("selected");
+            if(self.selectedTracks.indexOf(index) < 0) {
+                self.selectedTracks.push(index);
             }
-        } else if(event.shiftKey && self.selectedTracks.length > 0) {
-            // Reset the selected list with the range of tracks from the first selected track to the clicked track
-            var firstIndex = self.trackVisibleTracks.indexOf(self.selectedTracks[0]);
-            var lastIndex  = self.trackVisibleTracks.indexOf(track);
-            var selectedSubset;
-            if(lastIndex > firstIndex) {
-                selectedSubset = self.trackVisibleTracks.slice(firstIndex, lastIndex + 1);
-            } else {
-                selectedSubset = self.trackVisibleTracks.slice(lastIndex, firstIndex + 1);
+        } else if(event.shiftKey && self.selectedTracks().length > 0) {
+            // Find the range of indices from the first selected track to the clicked track
+            var firstIndex = self.selectedTracks()[0];
+            var lastIndex  = index;
+            if(firstIndex > lastIndex) {
+                // Swap them, they're backwards
+                var temp = firstIndex;
+                firstIndex = lastIndex;
+                lastIndex = temp;
             }
+
+            // Reset the list
             self.clearSelection();
-            ko.utils.arrayForEach(selectedSubset, function(item) {
-                $("#row" + item.Id).addClass("selected");
-                self.selectedTracks.push(item);
-            });
+
+            // Generate the range of selected indices
+            for(var i = firstIndex; i <= lastIndex; i++) {
+                self.selectedTracks.push(i);
+            }
         } else {
             // Reset the selected list with clicked track
-            self.selectedTracks = [track];
-            $("tr.selected").removeClass("selected");
-            $("#row" + track.Id).addClass("selected");
+            self.clearSelection();
+            self.selectedTracks.push(index);
         }
     };
 
     self.clearSelection = function() {
-        $("tr.selected").removeClass("selected");
-        self.selectedTracks = [];
+        self.selectedTracks.removeAll();
     };
 
     self.createPlaylistSuccess = function(playlist) {
