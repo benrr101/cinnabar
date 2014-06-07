@@ -264,6 +264,10 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
+    self.visibleContextMenu = ko.observable(false);     // Which context menu is visible
+    self.visibleContextMenuTop = ko.observable(0);      // The top position of the context menu
+    self.visibleContextMenuLeft = ko.observable(0);     // The left position of the context menu
+
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
     self.nowPlayingIndex = 0;                           // Index into the nowPlayingList of the currently playing track
@@ -550,6 +554,16 @@ function ViewModel() {
         // Clear out the playlist for edit
         self.staticPlaylistEdit(null);
     };
+
+    self.showContextMenu = function(model, event) {
+        self.visibleContextMenu("track");
+        self.visibleContextMenuLeft(event.pageX);
+        self.visibleContextMenuTop(event.pageY);
+    }
+
+    self.hideContextMenu = function() {
+        self.visibleContextMenu(false);
+    }
 
     self.volumeDragStart = function() {
         // Prevent the volume dropdown from sliding back up

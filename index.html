@@ -71,6 +71,22 @@
         <p data-bind="text: generalError()"></p>
     </div>
 </div>
+<div id='context' data-bind="visible: visibleContextMenu(), click: hideContextMenu">
+    <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
+                                                          style: {left: visibleContextMenuLeft() + 'px', top: visibleContextMenuTop() + 'px'}">
+        <ul>
+            <li>Add to Queue</li>
+            <li>
+                Add to Playlist
+                <ul>
+                    <li>AAA</li>
+                </ul>
+            </li>
+            <li>Edit Track Metadata</li>
+            <li>Delete Track</li>
+        </ul>
+    </div>
+</div>
 
 <div id='topBar'>
     <div id='logo'>
@@ -293,7 +309,8 @@
                     <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'),
                                           mouseout: $root.trackHover.bind($data, 'end'),
                                           dblclick: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()),
-                                          click: function(data, event) { $root.selectTrack($index(), event) }
+                                          click: function(data, event) { $root.selectTrack($index(), event) },
+                                          contextmenu: $root.showContextMenu
                                          },
                                    dblclickBubble: false,
                                    attr: {id: 'row' + $data.Id},

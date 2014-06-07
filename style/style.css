@@ -35,8 +35,10 @@ div.button:hover { background-color: #2c2c2d }
 .modal button:hover { background-color: #a5a5a5; }
 
 /* Specific Styles */
-#modals { position:absolute; left:0; top:0; z-index:999; height:100%; width: 100%; background-color:rgba(25,25,26,0.7)}
+#context { position:absolute; left:0; top:0; z-index:998; height:100%; width: 100%; }
+.contextMenu { position: absolute; padding: 20px; background-color: green;}
 
+#modals { position:absolute; left:0; top:0; z-index:999; height:100%; width: 100%; background-color:rgba(25,25,26,0.7)}
 #settingsModal { width: 600px; }
 .modal .colLeft { float:left; width: 190px; font-family: "SSBold", sans-serif; }
 .modal .colRight { float: left; width: 390px; padding-left: 20px; }
