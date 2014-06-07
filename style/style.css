@@ -36,7 +36,9 @@ div.button:hover { background-color: #2c2c2d }
 
 /* Specific Styles */
 #context { position:absolute; left:0; top:0; z-index:998; height:100%; width: 100%; }
-.contextMenu { position: absolute; padding: 20px; background-color: green;}
+.contextMenu { position: absolute; border: 1px solid #DCDCDC; font-size: 0.8em; transition: all 0.4s ease 0s; }
+.contextMenu ul li { padding: 2.5px 13px; background-color: #0055D4; }
+.contextMenu ul li:hover { background-color: #1f1f21; cursor: pointer; }
 
 #modals { position:absolute; left:0; top:0; z-index:999; height:100%; width: 100%; background-color:rgba(25,25,26,0.7)}
 #settingsModal { width: 600px; }
