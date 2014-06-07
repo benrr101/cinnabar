@@ -297,7 +297,7 @@
                                          },
                                    dblclickBubble: false,
                                    attr: {id: 'row' + $data.Id},
-                                   dragTrack: {vm: $root, track: $data},
+                                   dragTrack: {vm: $root, index: $index()},
                                    css: {selected: $root.selectedTracks.indexOf($index()) >= 0}
                                    ">
                         <td class='playIndicator'>

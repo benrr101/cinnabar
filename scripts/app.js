@@ -143,7 +143,7 @@ function calculateTimeVerbal(time) {
 // KO BINDINGS /////////////////////////////////////////////////////////////
 ko.bindingHandlers.dragTrack = {
     init: function(element, valueAccessor) {
-        var track = valueAccessor().track;
+        var index = valueAccessor().index;
         var viewModel = valueAccessor().vm;
         var $elem = $(element);
 
@@ -155,12 +155,12 @@ ko.bindingHandlers.dragTrack = {
             },
             helper: function(event) {
                 // Clear out the selection if we're dragging a track that isn't already selected
-                if(viewModel.selectedTracks.indexOf(track) < 0) {
+                if(viewModel.selectedTracks.indexOf(index) < 0) {
                     viewModel.clearSelection();
-                    viewModel.selectTrack(track, event);
+                    viewModel.selectTrack(index, event);
                 }
 
-                return $("<div class='draggingTrack'>" + viewModel.selectedTracks.length + " Tracks Selected</div>");
+                return $("<div class='draggingTrack'>" + viewModel.selectedTracks().length + " Tracks Selected</div>");
             },
             stop: function() {
                 viewModel.dragging = false;
@@ -178,7 +178,13 @@ ko.bindingHandlers.dropTrack = {
         $elem.droppable({
             tolerance: "pointer",
             drop: function() {
-                playlist.addTracks(viewModel.selectedTracks, viewModel.generalError);
+                // Convert the selected indices list to a list of tracks
+                var selectedTracks = [];
+                for(var i = 0; i < viewModel.selectedTracks().length; ++i) {
+                    selectedTracks.push(viewModel.trackVisibleTracks()[i]);
+                }
+
+                playlist.addTracks(selectedTracks, viewModel.generalError);
             }
         });
     }
