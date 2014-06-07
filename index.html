@@ -75,7 +75,7 @@
     <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
                                                           style: {left: visibleContextMenuLeft() + 'px', top: visibleContextMenuTop() + 'px'}">
         <ul>
-            <li>Add to Queue</li>
+            <li data-bind="click: enqueueTracks">Add to Queue</li>
             <li>Add to Playlist</li>
             <li>Edit Metadata</li>
             <li>Delete</li>
@@ -305,7 +305,7 @@
                                           mouseout: $root.trackHover.bind($data, 'end'),
                                           dblclick: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()),
                                           click: function(data, event) { $root.selectTrack($index(), event) },
-                                          contextmenu: $root.showContextMenu
+                                          contextmenu: function(data, event) { $root.showTrackContextMenu($index(), event) }
                                          },
                                    dblclickBubble: false,
                                    attr: {id: 'row' + $data.Id},
@@ -328,7 +328,6 @@
                         <td data-bind="text: Metadata.get('Year')"></td>
                         <td>
                             <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack.bind($data, $index)">DQ</span>
-                            <span data-bind="visible: $root.visiblePane() != 'queue', click: $root.enqueueTrack">EQ</span>
                         </td>
                     </tr>
                 </tbody>

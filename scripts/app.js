@@ -398,9 +398,11 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.enqueueTrack = function(track) {
-        // Pass the request to the playback vm
-        self.playback().enqueueTrack(track);
+    self.enqueueTracks = function() {
+        // Pass the tracks to be enqueued to the playback view model
+        $.each(self.selectedTracks(), function(item) {
+            self.playback().enqueueTrack(self.trackVisibleTracks()[item]);
+        });
     };
 
     self.dequeueTrack = function(index) {
@@ -555,11 +557,18 @@ function ViewModel() {
         self.staticPlaylistEdit(null);
     };
 
-    self.showContextMenu = function(model, event) {
+    self.showTrackContextMenu = function(index, event) {
+        // Select the right-clicked track, but only do so if the track that
+        // was right-clicked was not in the selection
+        if(self.selectedTracks.indexOf(index) < 0) {
+            self.selectTrack(index, {});
+        }
+
+        // Show the context menu
         self.visibleContextMenu("track");
         self.visibleContextMenuLeft(event.pageX);
         self.visibleContextMenuTop(event.pageY);
-    }
+    };
 
     self.hideContextMenu = function() {
         self.visibleContextMenu(false);
