@@ -264,9 +264,10 @@ function ViewModel() {
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
 
-    self.visibleContextMenu = ko.observable(false);     // Which context menu is visible
-    self.visibleContextMenuTop = ko.observable(0);      // The top position of the context menu
-    self.visibleContextMenuLeft = ko.observable(0);     // The left position of the context menu
+    self.visibleContextMenu = ko.observable(false);         // Which context menu is visible
+    self.visibleContextMenuTop = ko.observable(0);          // The top position of the context menu
+    self.visibleContextMenuLeft = ko.observable(false);     // The left position of the context menu
+    self.visibleContextMenuRight = ko.observable(false);    // The right position of the context menu
 
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
@@ -566,10 +567,21 @@ function ViewModel() {
             self.selectTrack(index, {});
         }
 
+        // @magicNumbers The -5 is to make the cursor appear inside the context menu, not on the edge
+
         // Show the context menu
         self.visibleContextMenu("track");
-        self.visibleContextMenuLeft(event.pageX);
-        self.visibleContextMenuTop(event.pageY);
+        self.visibleContextMenuTop(event.pageY - 5);
+
+        // Flip the positioning of the context menu if the cursor is too far to the right
+        var innerWidth = window.innerWidth;
+        if(event.pageX / innerWidth > .75) {
+            self.visibleContextMenuLeft(false);
+            self.visibleContextMenuRight(innerWidth - event.pageX - 5);
+        } else {
+            self.visibleContextMenuLeft(event.pageX - 5);
+            self.visibleContextMenuRight(false);
+        }
     };
 
     self.hideContextMenu = function() {

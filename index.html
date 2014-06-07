@@ -73,7 +73,11 @@
 </div>
 <div id='context' data-bind="visible: visibleContextMenu(), click: hideContextMenu">
     <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
-                                                          style: {left: visibleContextMenuLeft() + 'px', top: visibleContextMenuTop() + 'px'}">
+                                                          style: {
+                                                            left: visibleContextMenuLeft() ? visibleContextMenuLeft() + 'px' : 'auto',
+                                                            right: visibleContextMenuRight() ? visibleContextMenuRight() + 'px' : 'auto',
+                                                            top: visibleContextMenuTop() + 'px'
+                                                          }">
         <ul>
             <li data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static'),
                            click: enqueueTracks">
