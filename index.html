@@ -91,7 +91,7 @@
                 <ul data-bind="foreach: staticPlaylists,
                                css: { left: visibleContextMenuFloat() == 'right', right: visibleContextMenuFloat() == 'left' }
                                ">
-                    <li class='selectable' data-bind="text: Name"></li>
+                    <li class='selectable' data-bind="text: Name, click: $root.addTracksToPlaylist"></li>
                 </ul>
             </li>
             <li>Edit Metadata</li>

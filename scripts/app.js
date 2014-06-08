@@ -181,7 +181,8 @@ ko.bindingHandlers.dropTrack = {
                 // Convert the selected indices list to a list of tracks
                 var selectedTracks = [];
                 for(var i = 0; i < viewModel.selectedTracks().length; ++i) {
-                    selectedTracks.push(viewModel.trackVisibleTracks()[i]);
+                    var trackIndex = viewModel.selectedTracks()[i];
+                    selectedTracks.push(viewModel.trackVisibleTracks()[trackIndex]);
                 }
 
                 playlist.addTracks(selectedTracks, viewModel.generalError);
@@ -412,6 +413,17 @@ function ViewModel() {
             self.trackVisibleTracks.splice(this, 1);
             self.playback().dequeueTrack(this);
         });
+    };
+
+    self.addTracksToPlaylist = function(playlist) {
+        // Convert the selected indices list to a list of tracks
+        var selectedTracks = [];
+        for(var i = 0; i < self.selectedTracks().length; ++i) {
+            var trackIndex = self.selectedTracks()[i];
+            selectedTracks.push(self.trackVisibleTracks()[trackIndex]);
+        }
+
+        playlist.addTracks(selectedTracks, self.generalError);
     };
 
     self.showPlaylist = function(playlist) {
