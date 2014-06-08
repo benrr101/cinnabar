@@ -444,7 +444,7 @@ function ViewModel() {
         self.visiblePane("queue");
 
         // Clear out the current visible tracks and make the queue visible
-        self.trackVisibleTracks(self.playback().queue);
+        self.trackVisibleTracks(self.playback().queue());
 
         // Clear the selection
         self.clearSelection();

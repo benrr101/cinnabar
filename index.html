@@ -344,7 +344,7 @@
                         <td data-bind="text: Metadata.get('Album')"></td>
                         <td data-bind="text: Metadata.get('Year')"></td>
                         <td>
-                            <!-- TODO: Put a handle for opening the context menu here -->
+                            <img src='img/contextMenu.png' alt='More...' data-bind="click: function(q, e) { $root.showTrackContextMenu($index, e); }" />
                         </td>
                     </tr>
                 </tbody>
