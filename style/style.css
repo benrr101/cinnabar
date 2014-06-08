@@ -35,10 +35,15 @@ div.button:hover { background-color: #2c2c2d }
 .modal button:hover { background-color: #a5a5a5; }
 
 /* Specific Styles */
-#context { position:absolute; left:0; top:0; z-index:998; height:100%; width: 100%; }
-.contextMenu { position: absolute; border: 1px solid #DCDCDC; font-size: 0.8em; transition: all 0.4s ease 0s; }
-.contextMenu ul li { padding: 2.5px 13px; background-color: #0055D4; }
+#context { position:absolute; left:0; top:0; z-index:997; height:100%; width: 100%; }
+.contextMenu { position: absolute; font-size: 0.8em; transition: all 0.4s ease 0s;}
+.contextMenu ul { width: 150px; border: 1px solid #DCDCDC; text-overflow: ellipsis; }
+.contextMenu ul li { position: relative; padding: 2.5px 13px; background-color: #0055D4; }
 .contextMenu ul li:hover { background-color: #1f1f21; cursor: pointer; }
+.contextMenu ul ul { position: absolute; max-height: 350px; top:0; display: none; z-index: 998; overflow-y: auto; }
+.contextMenu ul ul.right { left: 95%; }
+.contextMenu ul ul.left { right: 95%; }
+.contextMenu ul li:hover > ul { display: block; }
 
 #modals { position:absolute; left:0; top:0; z-index:999; height:100%; width: 100%; background-color:rgba(25,25,26,0.7)}
 #settingsModal { width: 600px; }

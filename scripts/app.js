@@ -266,8 +266,8 @@ function ViewModel() {
 
     self.visibleContextMenu = ko.observable(false);         // Which context menu is visible
     self.visibleContextMenuTop = ko.observable(0);          // The top position of the context menu
-    self.visibleContextMenuLeft = ko.observable(false);     // The left position of the context menu
-    self.visibleContextMenuRight = ko.observable(false);    // The right position of the context menu
+    self.visibleContextMenuXPos = ko.observable(false);     // The x position of the menu. This is calculated in the data-bind based on the float
+    self.visibleContextMenuFloat = ko.observable("left");   // Whether the menu position should float to the left or right
 
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
@@ -576,11 +576,11 @@ function ViewModel() {
         // Flip the positioning of the context menu if the cursor is too far to the right
         var innerWidth = window.innerWidth;
         if(event.pageX / innerWidth > .75) {
-            self.visibleContextMenuLeft(false);
-            self.visibleContextMenuRight(innerWidth - event.pageX - 5);
+            self.visibleContextMenuFloat("right");
+            self.visibleContextMenuXPos(innerWidth - event.pageX - 5);
         } else {
-            self.visibleContextMenuLeft(event.pageX - 5);
-            self.visibleContextMenuRight(false);
+            self.visibleContextMenuFloat("left");
+            self.visibleContextMenuXPos(event.pageX - 5);
         }
     };
 

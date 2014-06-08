@@ -74,8 +74,8 @@
 <div id='context' data-bind="visible: visibleContextMenu(), click: hideContextMenu">
     <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
                                                           style: {
-                                                            left: visibleContextMenuLeft() ? visibleContextMenuLeft() + 'px' : 'auto',
-                                                            right: visibleContextMenuRight() ? visibleContextMenuRight() + 'px' : 'auto',
+                                                            left: visibleContextMenuFloat() == 'left' ? visibleContextMenuXPos() + 'px' : 'auto',
+                                                            right: visibleContextMenuFloat() == 'right' ? visibleContextMenuXPos() + 'px' : 'auto',
                                                             top: visibleContextMenuTop() + 'px'
                                                           }">
         <ul>
@@ -86,7 +86,14 @@
             <li data-bind="visible: visiblePane() == 'queue', click: dequeueTracks">
                 Remove from Queue
             </li>
-            <li>Add to Playlist</li>
+            <li>
+                Add to Playlist
+                <ul data-bind="foreach: staticPlaylists,
+                               css: { left: visibleContextMenuFloat() == 'right', right: visibleContextMenuFloat() == 'left' }
+                               ">
+                    <li class='selectable' data-bind="text: Name"></li>
+                </ul>
+            </li>
             <li>Edit Metadata</li>
             <li>Delete</li>
         </ul>
