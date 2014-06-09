@@ -235,7 +235,7 @@ function PlaybackViewModel() {
 
     self.dequeueTrack = function(index) {
         // Do some fancy splicing to remove the offending index
-        self.queue.splice(index(), 1);
+        self.queue.splice(index, 1);
     };
 
     self.setVolume = function(percent) {

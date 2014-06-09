@@ -71,6 +71,37 @@
         <p data-bind="text: generalError()"></p>
     </div>
 </div>
+<div id='context' data-bind="visible: visibleContextMenu(), click: hideContextMenu">
+    <div id='trackContext' class='contextMenu' data-bind="visible: visibleContextMenu() == 'track',
+                                                          style: {
+                                                            left: visibleContextMenuFloat() == 'left' ? visibleContextMenuXPos() + 'px' : 'auto',
+                                                            right: visibleContextMenuFloat() == 'right' ? visibleContextMenuXPos() + 'px' : 'auto',
+                                                            top: visibleContextMenuTop() + 'px'
+                                                          }">
+        <ul>
+            <li data-bind="visible: visiblePane() == 'tracks' || visiblePane().startsWith('auto') || visiblePane().startsWith('static'),
+                           click: enqueueTracks">
+                Add to Queue
+            </li>
+            <li data-bind="visible: visiblePane() == 'queue', click: dequeueTracks">
+                Remove from Queue
+            </li>
+            <li>
+                Add to Playlist
+                <ul data-bind="foreach: staticPlaylists,
+                               css: { left: visibleContextMenuFloat() == 'right', right: visibleContextMenuFloat() == 'left' }
+                               ">
+                    <li class='selectable' data-bind="text: Name, click: $root.addTracksToPlaylist"></li>
+                </ul>
+            </li>
+            <li data-bind="visible: visiblePane().startsWith('static'), click: removeTracksFromPlaylist">
+                Remove from Playlist
+            </li>
+            <li>Edit Metadata</li>
+            <li>Delete</li>
+        </ul>
+    </div>
+</div>
 
 <div id='topBar'>
     <div id='logo'>
@@ -293,7 +324,8 @@
                     <tr data-bind="event:{mouseover: $root.trackHover.bind($data, 'start'),
                                           mouseout: $root.trackHover.bind($data, 'end'),
                                           dblclick: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()),
-                                          click: function(data, event) { $root.selectTrack($index(), event) }
+                                          click: function(data, event) { $root.selectTrack($index(), event) },
+                                          contextmenu: function(data, event) { $root.showTrackContextMenu($index(), event) }
                                          },
                                    dblclickBubble: false,
                                    attr: {id: 'row' + $data.Id},
@@ -315,8 +347,7 @@
                         <td data-bind="text: Metadata.get('Album')"></td>
                         <td data-bind="text: Metadata.get('Year')"></td>
                         <td>
-                            <span data-bind="visible: $root.visiblePane() == 'queue', click: $root.dequeueTrack.bind($data, $index)">DQ</span>
-                            <span data-bind="visible: $root.visiblePane() != 'queue', click: $root.enqueueTrack">EQ</span>
+                            <img src='img/contextMenu.png' alt='More...' data-bind="click: function(q, e) { $root.showTrackContextMenu($index, e); }" />
                         </td>
                     </tr>
                 </tbody>
