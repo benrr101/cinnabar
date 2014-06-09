@@ -304,6 +304,19 @@ function ViewModel() {
         $.ajax(params);
     };
 
+    self.submitLogout = function() {
+        // Purge the stored settings and logged in username, forget we had a session
+        sessionStorage.removeItem(settingsStorageKey);
+        sessionStorage.removeItem(usernameStorageKey);
+
+        // Build the request
+        var params = getBaseAjaxParams("POST", serverAddress + "/users/logout");
+        params.error = function() { alert("Logout failed."); }
+        params.success = function() { alert("You have been successfully logged out.")}
+
+        $.ajax(params);
+    };
+
     self.bootRequests = function() {
         // Ajax requests
         self.fetchAutoPlaylists();
