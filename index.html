@@ -155,8 +155,13 @@
                 </div>
             </div>
         </div>
-        <div class='button small' data-bind="click: showSettings">
+        <div id='settingsButton' class='button small'>
             <img src='img/options.png' alt='settings' title='Settings' />
+            <ul id='settingsMenu'>
+                <li data-bind="click: showSettings">Settings</li>
+                <li>Logout</li>
+                <li>About Cinnabar</li>
+            </ul>
         </div>
     </div>
 </div>

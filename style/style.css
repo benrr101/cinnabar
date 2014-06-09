@@ -98,8 +98,8 @@ div.button:hover { background-color: #2c2c2d }
 #logo { margin-left:15px; margin-top: 15px; }
 
 #topBar > div { float:left;}
-#topBar .button.small { height: 32px; width: 32px; margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0; }
-#topBar .button.large { margin-top:10px; padding:10px; line-height:0;}
+#topBar .button.small { height: 32px; width: 32px; margin-top:22px; margin-left: 3px; margin-right:3px; padding:10px; line-height: 0;}
+#topBar .button.large { margin-top:10px; padding:10px; line-height: 0}
 
 #trackPane {float: left; width: calc(100% - 275px); height: calc(100% - 48px); font-size:0.8em; overflow-y:scroll;}
 #trackPane > div { padding:10px; }
@@ -116,6 +116,13 @@ div.button:hover { background-color: #2c2c2d }
 #volume:hover #volumeBox, #volume img:hover #volumeBox, #volumeBox.locked { height:120px; padding: 10px 10px 20px; }
 #volume:hover #volumeSlider, #volumeBox.locked #volumeSlider { width: 7px; height: 100%; margin-left:12px; padding-bottom: 10px; background-color: #dcdcdc; }
 #volume:hover #volumeHandle, #volumeBox.locked #volumeHandle { width: 20px; height: 10px; margin-left:-7px; margin-bottom:-10px; background-color: #dcdcdc; }
+
+#settingsButton {position: relative; }
+#settingsButton > ul { position: absolute; right: 0; top: 100%; width: 175px; display: none; background-color: #2C2C2D;}
+#settingsButton:hover > ul { display: block; }
+#settingsButton > ul > li { padding: 20px 20px 20px 20px; }
+#settingsButton > ul > li:hover { background-color: #0055d4; }
+
 
 #playSlider { height: 100px; width: calc(100% - 275px - 265px); padding-left:10px; padding-right:10px;}
 #scrubber {width:100%; height: 5px; margin-top: 32px; background-color:#dcdcdc;}
