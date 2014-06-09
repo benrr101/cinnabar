@@ -94,6 +94,9 @@
                     <li class='selectable' data-bind="text: Name, click: $root.addTracksToPlaylist"></li>
                 </ul>
             </li>
+            <li data-bind="visible: visiblePane().startsWith('static'), click: removeTracksFromPlaylist">
+                Remove from Playlist
+            </li>
             <li>Edit Metadata</li>
             <li>Delete</li>
         </ul>
