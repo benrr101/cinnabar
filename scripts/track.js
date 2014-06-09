@@ -31,7 +31,7 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
     }
 
     // Set up a ajax request for the track
-    var params = getBaseAjaxParams("GET", serverAddress + "tracks/" + self.Id);
+    var params = getBaseAjaxParams("GET", serverAddress + "/tracks/" + self.Id);
     params.error = function(xhr) {
         errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track library for unknown reason.")
     }

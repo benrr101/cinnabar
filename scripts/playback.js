@@ -211,9 +211,9 @@ function PlaybackViewModel() {
 
         // Create an audio thing if needed
         if(self.audioObject !== null) {
-            self.audioObject.src = serverAddress + trackQuality.Href;
+            self.audioObject.src = serverAddress + '/' + trackQuality.Href;
         } else {
-            self.audioObject = new Audio(serverAddress + trackQuality.Href);
+            self.audioObject = new Audio(serverAddress + '/' + trackQuality.Href);
             self.audioObject.volume = self.volume();
             self.audioObject.ontimeupdate = self.onTimeUpdate;
             self.audioObject.onended = self.nextTrack;
