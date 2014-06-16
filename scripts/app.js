@@ -431,6 +431,29 @@ function ViewModel() {
         });
     };
 
+    self.deleteTracks = function() {
+        // Call the delete handler on all the selected tracks
+        $.each(self.selectedTracks().sort().reverse(), function() {
+            // Grab the track in question
+            var track = self.trackVisibleTracks.splice(this, 1);
+            track[0].delete(null, self.generalError);
+
+            // Remove the track from the library
+            delete self.trackLibrary[track.Id];
+        });
+
+        // Purge all loaded playlists to require that they be reloaded
+        $.each(self.autoPlaylists(), function() {
+            this.Loaded = false;
+        });
+        $.each(self.staticPlaylists(), function() {
+            this.Loaded = false;
+        });
+
+        // Reset the selection
+        self.clearSelection();
+    };
+
     self.addTracksToPlaylist = function(playlist) {
         // Convert the selected indices list to a list of tracks
         var selectedTracks = [];
@@ -444,7 +467,7 @@ function ViewModel() {
 
     self.removeTracksFromPlaylist = function() {
         // Remove the tracks from the visible list
-        $.each(self.selectedTracks(), function() {
+        $.each(self.selectedTracks().sort().reverse(), function() {
             self.trackVisibleTracks.splice(this, 1);
         });
 

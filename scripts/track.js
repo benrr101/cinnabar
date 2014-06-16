@@ -33,8 +33,8 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
     // Set up a ajax request for the track
     var params = getBaseAjaxParams("GET", serverAddress + "/tracks/" + self.Id);
     params.error = function(xhr) {
-        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track library for unknown reason.")
-    }
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track for unknown reason.")
+    };
     params.success = function(xhr) {
         // Store the information we don't already have
         self.Qualities = xhr.Qualities;
@@ -45,6 +45,25 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         if(callback !== null) {
             callback(self);
         }
-    }
+    };
     $.ajax(params);
-}
+};
+
+TrackViewModel.prototype.delete = function(callback, errorCallback) {
+    var self = this;
+
+    // Set up the parameters to delete the track
+    var params = getBaseAjaxParams("DELETE", serverAddress + "/tracks/" + self.Id);
+    params.error = function(xhr) {
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to delete track for unknown reason.")
+    };
+    params.success = function(xhr) {
+        // That's it, we're done here. To make sure no one tries anything silly, unload the track
+        self.Loaded = false;
+
+        if(callback !== null) {
+            callback(self);
+        }
+    };
+    $.ajax(params);
+};
