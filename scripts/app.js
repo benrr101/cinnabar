@@ -255,6 +255,8 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
+    self.aboutVisible = ko.observable(false);       // Whether or not the about modal is visible
+
     self.trackLibrary = {};                          // Used for caching all tracks.
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
@@ -628,7 +630,15 @@ function ViewModel() {
 
     self.hideContextMenu = function() {
         self.visibleContextMenu(false);
-    }
+    };
+
+    self.showAbout = function() {
+        self.aboutVisible(true);
+    };
+
+    self.hideAbout = function() {
+        self.aboutVisible(false);
+    };
 
     self.volumeDragStart = function() {
         // Prevent the volume dropdown from sliding back up

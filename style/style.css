@@ -14,6 +14,7 @@ hr { border:1px solid #dcdcdc; }
 th { font-family: "SSBold", sans-serif; text-align: left; border-bottom:2px solid #dcdcdc; }
 td { padding-top:7px; padding-bottom:7px; }
 label.block { display: block; }
+a { color: #ababab; }
 
 /* Global classes */
 .centerH { margin-left: auto; margin-right: auto; }

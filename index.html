@@ -11,7 +11,7 @@
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || staticPlaylistEdit() != null">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || staticPlaylistEdit() != null || aboutVisible()">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -22,6 +22,19 @@
             <input type='password' data-bind="value: loginPassword" id='loginPassword' />
             <button data-bind="click: loginSubmitLogin">Login</button>
         </form>
+    </div>
+    <div id='aboutModal' class='modal' data-bind="visible: aboutVisible()" style='width:450px'>
+        <img src='img/logo2.png' style='float: left'/>
+        <h1 style='float:left; margin-left: 20px; line-height: 70px;'>Cinnabar on Dolomite</h1>
+        <p>
+            Cinnabar is a web-based media player that connects to your Dolomite media. It is the open source work of Ben
+            Russell (<a href='https://github.com/benrr101' target="_blank">benrr101 on GitHub</a>).
+        </p>
+        <p>
+            <a href='https://github.com/benrr101/cinnabar' target="_blank">Check it out on Github</a> |
+            <a href='https://github.com/benrr101/cinnabar/issues' target="_blank">Submit Bug Reports</a>
+        </p>
+        <button data-bind="click: hideAbout" style='float:right; margin:0'>Close</button>
     </div>
     <div id='addPlaylistModal' class='modal' data-bind="visible: staticPlaylistEdit() != null, with: staticPlaylistEdit">
         <form>
@@ -160,7 +173,7 @@
             <ul id='settingsMenu'>
                 <li data-bind="click: showSettings">Settings</li>
                 <li data-bind="click: submitLogout">Logout</li>
-                <li>About Cinnabar</li>
+                <li data-bind="click: showAbout">About Cinnabar</li>
             </ul>
         </div>
     </div>
