@@ -4,7 +4,7 @@
 html { height: 100%; font-size: 1.188em; -webkit-text-size-adjust: 1.188em; -ms-text-size-adjust: 1.188em; }
 body { height: 100%; margin:0; padding:0; font-family: "SS", sans-serif; color: #dcdcdc; background-color: #282829}
 h1, h2, h3, h4 { font-weight: normal; }
-input, select { border:0; margin:0; padding: 8px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"SS", sans-serif; font-size: 0.875em; }
+input, select, textarea { border:0; margin:0; padding: 8px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"SS", sans-serif; font-size: 0.875em; }
 button { border:0; padding: 10px 20px; margin:0; margin-right: 20px; font-family:"SS", sans-serif; transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
 button:hover {cursor:pointer;}
 ul {padding: 0; margin: 0;}
@@ -55,14 +55,17 @@ div.button:hover { background-color: #2c2c2d }
 
 .pane { float: left; width: calc(100% - 315px); height: calc(100% - 68px); padding-left: 20px; padding-right: 20px; padding-bottom: 20px; }
 .pane h1, .pane h2 { margin-bottom: 10px; margin-top: 10px; }
-.pane .row { width: 100%; overflow: auto; margin-bottom: 20px; }
+.pane .row { float: left; width: 100%; overflow: auto; margin-bottom: 20px; }
 .pane .colLeft { float: left; width: 25%; }
-.pane .colLeft label, .colLeft.label { font-family: "SSBold", sans-serif; }
+.pane label, .pane .label { font-family: "SSBold", sans-serif; }
 .pane .colLeft.tall { margin-top: 8px; }
 .pane .colRight { float: left; width: 73%; padding-left: 1%; padding-right: 1%;}
 .pane .colRight > input[type='text'], .pane .colRight > select { width: 200px }
 .pane table { width: 100%; padding:0; }
 .pane table select, .pane table input[type='text'] { width: calc(100% - 20px); }
+
+#metadataPane input[type='text'], .metadataPane select, #metadataPane textarea { width: 90%; }
+#metadataPane input[type='text'].short { width: 100px; }
 
 .draggingTrack { padding: 10px 10px 10px 20px; background-color: #dcdcdc; color: #1f1f21; }
 

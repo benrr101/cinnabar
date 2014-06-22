@@ -110,7 +110,7 @@
             <li data-bind="visible: visiblePane().startsWith('static'), click: removeTracksFromPlaylist">
                 Remove from Playlist
             </li>
-            <li>Edit Metadata</li>
+            <li data-bind="click: editMetadata">Edit Metadata</li>
             <li data-bind="click: deleteTracks">Delete</li>
         </ul>
     </div>
@@ -226,6 +226,102 @@
             <span data-bind="text: infoTotalTime()"></span>
         </span>
         <input type='text' placeholder="Search Tracks"/>
+    </div>
+    <div id='metadataPane' class='pane' data-bind="visible: visiblePane() == 'metadata'">
+        <h1>Edit Track Metadata</h1>
+        <form data-bind="with: trackEdit">
+            <div class='column' style='float:left; width: 49%; padding-left: 1%'>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdArtist'>Artist Name:</label></div>
+                    <div class='colRight'><input type='text' id='mdArtist' data-bind="value: Metadata.get('Artist')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdTitle'>Track Title:</label></div>
+                    <div class='colRight'><input type='text' id='mdTitle' data-bind="value: Metadata.get('Title')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdGenre'>Genre:</label></div>
+                    <div class='colRight'><input type='text' id='mdGenre' data-bind="value: Metadata.get('Genre')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdComposer'>Composer:</label></div>
+                    <div class='colRight'><input type='text' id='mdComposer' data-bind="value: Metadata.get('Composer')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdConductor'>Conductor:</label></div>
+                    <div class='colRight'><input type='text' id='mdConductor' data-bind="value: Metadata.get('Conductor')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdBPM'>Beats Per Minute:</label></div>
+                    <div class='colRight'><input type='text' id='mdBPM' data-bind="value: Metadata.get('BPM')" class='short' /></div>
+                </div>
+
+                <div class='row'>
+                    <div class='colLeft label'>Duration:</div>
+                    <div class='colRight' data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></div>
+                </div>
+
+                <div class='row'>
+                    <div class='colLeft label'>Date Added:</div>
+                    <div class='colRight' data-bind="text: calculateDate(Metadata.get('Date Added')())"></div>
+                </div>
+                <div class='row'>
+                    <div class='colLeft label'>Last Played:</div>
+                    <div class='colRight' data-bind="text: Metadata.get('Last Played')() == null ? 'Never Played' : calculateDate(Metadata.get('Last Played')())"></div>
+                </div>
+                <div class='row'>
+                    <div class='colLeft label'>Play Count:</div>
+                    <div class='colRight' data-bind="text: Metadata.get('Play Count')() == null ? '0' : Metadata.get('Play Count')"></div>
+                </div>
+
+                <div class='row'>
+                    <div class='colLeft label'>Uploaded Format:</div>
+                    <div class='colRight' data-bind="text: Metadata.get('Original Format')() + ' @ ' + Metadata.get('Original Bitrate')() + ' kbps'"></div>
+                </div>
+            </div>
+            <div class='column' style='float:left; width: 49%; padding-left: 1%'>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdAlbumArtist'>Album Artist:</label></div>
+                    <div class='colRight'><input type='text' id='mdAlbumArtist' data-bind="value: Metadata.get('Album Artist')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdAlbum'>Album Title:</label></div>
+                    <div class='colRight'><input type='text' id='mdAlbum' data-bind="value: Metadata.get('Album')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdYear'>Year:</label></div>
+                    <div class='colRight'><input type='text' id='mdYear' data-bind="value: Metadata.get('Year')" /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdTrackNo'>Track Number:</label></div>
+                    <div class='colRight'><input type='text' id='mdTrackNo' data-bind="value: Metadata.get('Track Number')" class='short' /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdTotalTracks'>Total Tracks:</label></div>
+                    <div class='colRight'><input type='text' id='mdTotalTracks' data-bind="value: Metadata.get('Track Count')" class='short' /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdDiscNo'>Disc Number:</label></div>
+                    <div class='colRight'><input type='text' id='mdDiscNo' data-bind="value: Metadata.get('Disc Number')" class='short' /></div>
+                </div>
+                <div class='row'>
+                    <div class="colLeft tall"><label for='mdTotalDiscs'>Total Discs:</label></div>
+                    <div class='colRight'><input type='text' id='mdTotalDiscs' data-bind="value: Metadata.get('Disc Count')" class='short'/></div>
+                </div>
+                <div class='row'>
+                    <div class='colLeft tall'><label for='mdCopyright'>Copyright:</label></div>
+                    <div class='colRight'><input type='text' id='mdCopyright' data-bind="value: Metadata.get('Copyright')" /></div>
+                </div>
+                <div class='row'>
+                    <div class='colLeft tall'><label for='mdComment'>Comment:</label></div>
+                    <div class='colRight'><textarea id='mdComment' data-bind="value: Metadata.get('Comment')"></textarea></div>
+                </div>
+            </div>
+            <div class='row'>
+                <button data-bind="">Edit Metadata</button>
+                <button data-bind="">Cancel</button>
+            </div>
+        </form>
     </div>
     <div id='autoPlaylistPane' class='pane' data-bind="visible: visiblePane() == 'addAutoPlaylist'">
         <form data-bind="with: autoPlaylistEdit">

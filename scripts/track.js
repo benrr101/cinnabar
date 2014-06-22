@@ -36,6 +36,10 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track for unknown reason.")
     };
     params.success = function(xhr) {
+        // Restore the metadata to force a reload of correct data
+        self.Metadata.removeAll();
+        self.Metadata.pushAll(xhr.Metadata);
+
         // Store the information we don't already have
         self.Qualities = xhr.Qualities;
         self.ArtHref = xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null;

@@ -23,14 +23,14 @@ var metadataFields = [
     {TagName: "Album", DisplayName: "Album", Type: "string"},
     {TagName: "Genre", DisplayName: "Genre", Type: "string"},
     {TagName: "Year", DisplayName: "Year", Type: "numeric"},
-    {TagName: "Track", DisplayName: "Track", Type: "string"},
+    {TagName: "Track", DisplayName: "Track", Type: "numeric"},
     {TagName: "TrackCount", DisplayName: "Track Count", Type: "numeric"},
     {TagName: "Disc", DisplayName: "Disc", Type: "numeric"},
     {TagName: "Lyrics", DisplayName: "Lyrics", Type: "string"},
     {TagName: "BeatsPerMinute", DisplayName: "BPM", Type: "numeric"},
     {TagName: "Conductor", DisplayName: "Conductor", Type: "string"},
     {TagName: "Copyright", DisplayName: "Copyright", Type: "string"},
-    {TagName: "Comment", DisplayName: "Copyright", Type: "string"},
+    {TagName: "Comment", DisplayName: "Comment", Type: "string"},
     {TagName: "DiscCount", DisplayName: "Disc Count", Type: "numeric"},
     {TagName: "DateAdded", DisplayName: "Date Added", Type: "date"},
     {TagName: "PlayCount", DisplayName: "Play Count", Type: "numeric"},
@@ -119,6 +119,16 @@ function calculateTrackTime(time) {
 
     // Put it together into a string
     return (hours > 0 ? String(hours) + ":" : "") + minutes + ":" + seconds;
+}
+
+/**
+ * Generates a human-readable date string from a unix timestamp
+ * @param unix  int A unix timestamp
+ * @returns string  A human readable version of the timestamp
+ */
+function calculateDate(unix) {
+    var date = new Date(unix * 1000);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
 }
 
 function calculateTimeVerbal(time) {
@@ -261,6 +271,7 @@ function ViewModel() {
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
+    self.trackEdit = ko.observable(null);           // The track that will have its metadata edited
     self.staticPlaylistEdit = ko.observable(null);  // The static playlist that's on the editing table
     self.autoPlaylistEdit = ko.observable(null);    // The auto playlist that's on the editing table
 
@@ -452,6 +463,18 @@ function ViewModel() {
 
         // Reset the selection
         self.clearSelection();
+    };
+
+    self.editMetadata = function() {
+        // Grab the selected track
+        var track = self.trackVisibleTracks()[self.selectedTracks()[0]];
+        if(!track.Loaded) {
+            track.fetch(null, self.generalError);
+        }
+
+        // Show the metadata editor
+        self.visiblePane("metadata");
+        self.trackEdit(track);
     };
 
     self.addTracksToPlaylist = function(playlist) {
