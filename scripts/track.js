@@ -71,3 +71,29 @@ TrackViewModel.prototype.delete = function(callback, errorCallback) {
     };
     $.ajax(params);
 };
+
+TrackViewModel.prototype.resetMetadata = function(callback, errorCallback){
+    var self = this;
+
+    // Force a reload of the track
+    self.Loaded = false;
+    self.fetch(callback, errorCallback);
+}
+
+TrackViewModel.prototype.submitMetadata = function(callback, errorCallback) {
+    var self = this;
+
+    // Set up the parameters to submit the metadata
+    var params = getBaseAjaxParams("POST", serverAddress + "/tracks/" + self.Id + "?clear");
+    params.data = JSON.stringify(self.Metadata.toJSON());
+    params.error = function(xhr) {
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track metadata for unknown reason.");
+    };
+    params.success = function(xhr) {
+        // Force reload the track
+        self.Loaded = false;
+        self.fetch(callback, errorCallback);
+    }
+
+    $.ajax(params);
+};
