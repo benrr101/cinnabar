@@ -4,6 +4,7 @@
     <title>Cinnabar on Dolomite</title>
     <script src='scripts/jquery-2.1.0.min.js' type='text/javascript'></script>
     <script src='scripts/jquery-ui-1.10.4.custom.min.js' type='text/javascript'></script>
+    <script src='scripts/jquery.form.js' type="text/javascript"></script>
     <script src='scripts/knockout-3.0.0.js' type='text/javascript'></script>
     <script src='scripts/ko.observableDictionary.js' type='text/javascript'></script>
     <link href='style/source_sans.css' rel='stylesheet' type='text/css' />
@@ -229,7 +230,7 @@
     </div>
     <div id='metadataPane' class='pane' data-bind="visible: visiblePane() == 'metadata'">
         <h1>Edit Track Metadata</h1>
-        <form data-bind="with: trackEdit">
+        <div data-bind="with: trackEdit">
             <div class='column' style='float:left; width: 49%; padding-left: 1%'>
                 <div class='row'>
                     <div class="colLeft tall"><label for='mdArtist'>Artist Name:</label></div>
@@ -257,26 +258,26 @@
                 </div>
 
                 <div class='row'>
-                    <div class='colLeft label'>Duration:</div>
-                    <div class='colRight' data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></div>
+                    <div class='colLeft label tall'>Duration:</div>
+                    <div class='colRight tall' data-bind="text: calculateTrackTime(Metadata.get('Duration')())"></div>
                 </div>
 
                 <div class='row'>
-                    <div class='colLeft label'>Date Added:</div>
-                    <div class='colRight' data-bind="text: calculateDate(Metadata.get('DateAdded')())"></div>
+                    <div class='colLeft label tall'>Date Added:</div>
+                    <div class='colRight tall' data-bind="text: calculateDate(Metadata.get('DateAdded')())"></div>
                 </div>
                 <div class='row'>
-                    <div class='colLeft label'>Last Played:</div>
-                    <div class='colRight' data-bind="text: Metadata.get('LastPlayed')() == null ? 'Never Played' : calculateDate(Metadata.get('Last Played')())"></div>
+                    <div class='colLeft label tall'>Last Played:</div>
+                    <div class='colRight tall' data-bind="text: Metadata.get('LastPlayed')() == null ? 'Never Played' : calculateDate(Metadata.get('Last Played')())"></div>
                 </div>
                 <div class='row'>
-                    <div class='colLeft label'>Play Count:</div>
-                    <div class='colRight' data-bind="text: Metadata.get('PlayCount')() == null ? '0' : Metadata.get('PlayCount')"></div>
+                    <div class='colLeft label tall'>Play Count:</div>
+                    <div class='colRight tall' data-bind="text: Metadata.get('PlayCount')() == null ? '0' : Metadata.get('PlayCount')"></div>
                 </div>
 
                 <div class='row'>
-                    <div class='colLeft label'>Uploaded Format:</div>
-                    <div class='colRight' data-bind="text: Metadata.get('OriginalFormat')() + ' @ ' + Metadata.get('OriginalBitrate')() + ' kbps'"></div>
+                    <div class='colLeft label tall'>Uploaded Format:</div>
+                    <div class='colRight tall' data-bind="text: Metadata.get('OriginalFormat')() + ' @ ' + Metadata.get('OriginalBitrate')() + ' kbps'"></div>
                 </div>
             </div>
             <div class='column' style='float:left; width: 49%; padding-left: 1%'>
@@ -316,12 +317,49 @@
                     <div class='colLeft tall'><label for='mdComment'>Comment:</label></div>
                     <div class='colRight'><textarea id='mdComment' data-bind="value: Metadata.get('Comment')"></textarea></div>
                 </div>
+                <div class='row'>
+                    <form id='albumArtForm'>
+                        <div class='colLeft tall label'>Album Art:</div>
+                        <div class='colRight'>
+                            <img class='mdAlbumArtPreview' data-bind="visible: ArtHref, attr: {src: ArtHref}" />
+                            <div class='mdAlbumArtPreview' data-bind="visible: ArtHref() == null">
+                                No Art Available
+                            </div>
+                            <div id='aaSpinner' class='mdAlbumArtPreview' style='display: none'>
+                                <img src='./img/spinner.gif' alt='Updating Album Art' />
+                            </div>
+                            <div style='float: left;'>
+                                <input id='albumArtFile' type='file' name='albumArtFile' style='display: none'
+                                       data-bind="event: {change: function() { uploadArt('albumArtFile', 'albumArtForm', $root.generalError); }}"/>
+                                <button data-bind="click: function() { fireFileDialog('albumArtFile'); }">Upload New Art</button>
+                                <button data-bind="visible: ArtHref">Delete Current Art</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class='row'>
                 <button data-bind="click: function() { submitMetadata($root.showAllTracks, $root.generalError) }">Edit Metadata</button>
                 <button data-bind="click: function() { resetMetadata($root.showAllTracks, $root.generalError) }">Cancel</button>
             </div>
-        </form>
+        </div>
+        <h2>Download Track</h2>
+        <table data-bind="with: trackEdit">
+            <thead>
+                <tr>
+                    <th>Format</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: Qualities">
+                <tr>
+                    <td data-bind="text: Name + (Name == 'Original' ? ' (' + Extension.toUpperCase() + ' ' + Bitrate + ')' : '')"></td>
+                    <td>
+                        <a data-bind="attr: {href: serverAddress + '/' + Href}">Download</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     <div id='autoPlaylistPane' class='pane' data-bind="visible: visiblePane() == 'addAutoPlaylist'">
         <form data-bind="with: autoPlaylistEdit">

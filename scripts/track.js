@@ -9,12 +9,14 @@ function TrackViewModel() {
 
     // NON-OBSERVABLE //////////////////////////////////////////////////////
     self.Id = null;                 // The GUID of the track
-    self.ArtHref = null;            // The URL for this track's art
     self.Loaded = false;            // Whether or not the track has been fetched from the server
-    self.Qualities = [];            // The list of qualities that are available for the track
 
     // OBSERVABLE //////////////////////////////////////////////////////////
+    self.ArtHref = ko.observable(null);         // The URL for this track's art
+                                                // NOTE: This must be observable for album art editing to work
     self.Metadata = ko.observableDictionary();  // The dictionary of metadata available for the track
+    self.Qualities = ko.observableArray();      // The list of qualities that are available for the track
+                                                // NOTE: This must be observable in order for download lists to work
 }
 
 // ACTIONS /////////////////////////////////////////////////////////////////
@@ -41,8 +43,8 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         self.Metadata.pushAll(xhr.Metadata);
 
         // Store the information we don't already have
-        self.Qualities = xhr.Qualities;
-        self.ArtHref = xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null;
+        self.Qualities(xhr.Qualities);
+        self.ArtHref(xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null);
         self.Loaded = true;
 
         // Call the optional callback
@@ -97,3 +99,34 @@ TrackViewModel.prototype.submitMetadata = function(callback, errorCallback) {
 
     $.ajax(params);
 };
+
+TrackViewModel.prototype.uploadArt = function(input, form, errorCallback) {
+    var self = this;
+
+    // Get the form element to submit
+    var formElement = $("#" + form);
+
+    // Set up the parameters to upload the album art
+    formElement.ajaxSubmit({
+        url: serverAddress + "/tracks/" + self.Id + "/art",
+        type: "POST",
+        dataType: "json",
+        xhrFields: { withCredentials: true },
+        beforeSubmit: function () {
+            // Show the spinner
+            $(".mdAlbumArtPreview").hide();
+            $("#aaSpinner").show();
+        },
+        success: function () {
+            // Force a reload (the spinner will be hidden on when complete, and
+            // the ArtHref update will redisplay the new art
+            self.Loaded = false;
+            self.fetch(function() { $("#aaSpinner").hide(); }, errorCallback);
+        },
+        error: function (xhr) {
+            // Hide the spinner
+            $("#aaSpinner").hide();
+            errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track metadata for unknown reason.");
+        }
+    });
+}

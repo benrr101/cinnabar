@@ -78,6 +78,12 @@ function getBaseAjaxParams(method, url) {
     };
 }
 
+function fireFileDialog(elementId) {
+    var element = $("#" + elementId);
+
+    element.click();
+}
+
 // UTILITY FUNCTIONS ///////////////////////////////////////////////////////
 /**
  * Generates a text string representation of a track number. Formats look like:
