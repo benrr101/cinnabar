@@ -203,8 +203,8 @@ function PlaybackViewModel() {
         var trackQuality;
         // @TODO: Remove references to vm.viewmodel
         for(var q = vm.viewModel.settings().quality; q >= 0; --q) {
-            if(typeof track.Qualities[q] !== "undefined") {
-                trackQuality = track.Qualities[q];
+            if(typeof track.Qualities()[q] !== "undefined") {
+                trackQuality = track.Qualities()[q];
                 break;
             }
         }
