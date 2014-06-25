@@ -330,7 +330,7 @@
                             </div>
                             <div style='float: left;'>
                                 <input id='albumArtFile' type='file' name='albumArtFile' style='display: none'
-                                       data-bind="event: {change: function() { uploadArt('albumArtFile', 'albumArtForm', $root.generalError); }}"/>
+                                       data-bind="event: {change: function() { uploadArt('albumArtForm', $root.generalError); }}"/>
                                 <button data-bind="click: function() { fireFileDialog('albumArtFile'); }">Upload New Art</button>
                                 <button data-bind="visible: ArtHref, click: function() { deleteArt($root.generalError) }">Delete Current Art</button>
                             </div>
@@ -340,6 +340,11 @@
             </div>
             <div class='row'>
                 <button data-bind="click: function() { submitMetadata($root.showAllTracks, $root.generalError) }">Edit Metadata</button>
+                <form id='replaceTrackForm' style="display: inline">
+                    <button data-bind="click: function() { fireFileDialog('replaceTrackFile'); }">Replace Track</button>
+                    <input id='replaceTrackFile' type='file' name='replaceTrackFile' style='display: none'
+                           data-bind="event: {change: function() { replace('replaceTrackForm', $root.generalError); }}" />
+                </form>
                 <button data-bind="click: function() { resetMetadata($root.showAllTracks, $root.generalError) }">Cancel</button>
             </div>
         </div>

@@ -105,7 +105,28 @@ TrackViewModel.prototype.resetMetadata = function(callback, errorCallback){
     // Force a reload of the track
     self.Loaded = false;
     self.fetch(callback, errorCallback);
-}
+};
+
+TrackViewModel.prototype.replace = function(formId, errorCallback) {
+    var self = this;
+
+    // Get the form element to submit
+    var formElement = $("#" + formId);
+
+    // Setup the parameters to upload the replacement track
+    formElement.ajaxSubmit({
+        url: serverAddress + "/tracks/" + self.Id,
+        type: "PUT",
+        dataType: "json",
+        xhrFields: { withCredentials: true},
+        success: function() {
+            alert("Successfully uploaded.");
+        },
+        error: function(xhr) {
+            errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track album art for unknown reason.");
+        }
+    });
+};
 
 TrackViewModel.prototype.submitMetadata = function(callback, errorCallback) {
     var self = this;
@@ -125,11 +146,11 @@ TrackViewModel.prototype.submitMetadata = function(callback, errorCallback) {
     $.ajax(params);
 };
 
-TrackViewModel.prototype.uploadArt = function(input, form, errorCallback) {
+TrackViewModel.prototype.uploadArt = function(formId, errorCallback) {
     var self = this;
 
     // Get the form element to submit
-    var formElement = $("#" + form);
+    var formElement = $("#" + formId);
 
     // Set up the parameters to upload the album art
     formElement.ajaxSubmit({
