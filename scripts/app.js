@@ -262,6 +262,7 @@ function ViewModel() {
 
     // DATA ////////////////////////////////////////////////////////////////
     self.generalError = ko.observable(false);   // Used for storing general error messages that will be visible in a modal
+    self.generalAlert = ko.observable(false);   // Used for showing general messages that are not error worthy
 
     self.loginLoggedIn = ko.observable(false);  // Used for determining if the login form should be displayed. On launch, we are not logged in.
     self.loginNotice   = ko.observable(null);   // Used for storing error messages that should be shown to the user.
@@ -690,6 +691,12 @@ function ViewModel() {
 
     self.hideAbout = function() {
         self.aboutVisible(false);
+    };
+
+    self.closeGeneral = function() {
+        // Reset the general alert and error
+        self.generalError(false);
+        self.generalAlert(false);
     };
 
     self.volumeDragStart = function() {

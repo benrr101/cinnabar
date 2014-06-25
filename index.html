@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || staticPlaylistEdit() != null || aboutVisible()">
+<div id='modals' data-bind="visible: !loginLoggedIn() || settingsVisible() || generalError() || generalAlert() || staticPlaylistEdit() != null || aboutVisible()">
     <div id='loginForm' class="modal" data-bind="visible: loginLoggedIn() == false">
         <form>
             <h1>Login to Dolomite</h1>
@@ -83,6 +83,12 @@
     <div id='genError' class="modal" data-bind="visible: generalError() != false">
         <h1>An Error Occurred</h1>
         <p data-bind="text: generalError()"></p>
+        <button data-bind="click: closeGeneral">Ok</button>
+    </div>
+    <div id='genAlert' class='modal' data-bind="visible: generalAlert() != false">
+        <h1>Just So You Know</h1>
+        <p data-bind="text: generalAlert()"></p>
+        <button data-bind="click: closeGeneral">Ok</button>
     </div>
 </div>
 <div id='context' data-bind="visible: visibleContextMenu(), click: hideContextMenu">

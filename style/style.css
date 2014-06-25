@@ -5,8 +5,10 @@ html { height: 100%; font-size: 1.188em; -webkit-text-size-adjust: 1.188em; -ms-
 body { height: 100%; margin:0; padding:0; font-family: "SS", sans-serif; color: #dcdcdc; background-color: #282829}
 h1, h2, h3, h4 { font-weight: normal; }
 input, select, textarea { border:0; margin:0; padding: 8px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"SS", sans-serif; font-size: 0.875em; }
-button { border:0; padding: 10px 20px; margin:0; margin-right: 20px; margin-bottom: 20px; font-family:"SS", sans-serif; transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
-button:hover {cursor:pointer;}
+button { border:0; padding: 10px 20px; margin:0; margin-right: 20px; margin-bottom: 20px; font-family:"SS", sans-serif;
+    background-color: #dcdcdc; color: #1f1f21;
+    transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
+button:hover { background-color: #a5a5a5; cursor:pointer; }
 ul {padding: 0; margin: 0;}
 li { list-style: none; }
 table { padding: 10px; }
@@ -25,15 +27,14 @@ div.button { display: inline-block; position:relative; }
 div.button:hover { background-color: #2c2c2d }
 .collapse { border-collapse: collapse; }
 
-.modal { margin-left: auto; margin-right: auto; transform: translate(0, 50%); -ms-transform: translate(0, 50%); -webkit-transform: translate(0, 50%); position: relative; width: 380px;
+.modal { margin-left: auto; margin-right: auto; transform: translate(0, 50%); -ms-transform: translate(0, 50%); -webkit-transform: translate(0, 50%); position: relative; width: 500px;
     padding: 20px; background-color:#0055d4; overflow: auto;}
 .modal h1, .modal h2 { margin-top: 0px; margin-bottom: 20px; }
 .modal h2 { margin-bottom: 10px; }
 .modal input[type='text'], .modal input[type='password'] { width: 360px; margin-bottom: 20px; }
 .modal input[type='radio'] { margin-left: 10px; margin-right: 10px; }
 .modal select { width: 360px; }
-.modal button { background-color: #dcdcdc; color: #1f1f21; }
-.modal button:hover { background-color: #a5a5a5; }
+.modal button {  margin-bottom: 0; }
 
 /* Specific Styles */
 #context { position:absolute; left:0; top:0; z-index:997; height:100%; width: 100%; }
