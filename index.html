@@ -332,7 +332,7 @@
                                 <input id='albumArtFile' type='file' name='albumArtFile' style='display: none'
                                        data-bind="event: {change: function() { uploadArt('albumArtFile', 'albumArtForm', $root.generalError); }}"/>
                                 <button data-bind="click: function() { fireFileDialog('albumArtFile'); }">Upload New Art</button>
-                                <button data-bind="visible: ArtHref">Delete Current Art</button>
+                                <button data-bind="visible: ArtHref, click: function() { deleteArt($root.generalError) }">Delete Current Art</button>
                             </div>
                         </div>
                     </form>

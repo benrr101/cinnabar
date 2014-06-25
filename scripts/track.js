@@ -21,6 +21,50 @@ function TrackViewModel() {
 
 // ACTIONS /////////////////////////////////////////////////////////////////
 // AJAX ////////////////////////////////////////////////////////////////////
+TrackViewModel.prototype.delete = function(callback, errorCallback) {
+    var self = this;
+
+    // Set up the parameters to delete the track
+    var params = getBaseAjaxParams("DELETE", serverAddress + "/tracks/" + self.Id);
+    params.error = function(xhr) {
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to delete track for unknown reason.")
+    };
+    params.success = function(xhr) {
+        // That's it, we're done here. To make sure no one tries anything silly, unload the track
+        self.Loaded = false;
+
+        if(callback !== null) {
+            callback(self);
+        }
+    };
+    $.ajax(params);
+};
+
+TrackViewModel.prototype.deleteArt = function(errorCallback) {
+    var self = this;
+
+    // Show the spinner
+    $(".mdAlbumArtPreview").hide();
+    $("#aaSpinner").show();
+
+    // Setup the ajax parameters to delete the album art
+    // to delete, we just send a blank request to the part update href
+    var params = getBaseAjaxParams("POST", serverAddress + "/tracks/" + self.Id + "/art");
+    params.success = function() {
+        // Force a reload (the spinner will be hidden on when complete, and
+        // the ArtHref update will redisplay the new art
+        self.Loaded = false;
+        self.fetch(function() { $("#aaSpinner").hide(); }, errorCallback);
+    };
+    params.error = function() {
+        // Hide the spinner
+        $("#aaSpinner").hide();
+        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to delete track album art for unknown reason.");
+    };
+
+    $.ajax(params);
+};
+
 TrackViewModel.prototype.fetch = function(callback, errorCallback) {
     var self = this;
 
@@ -48,25 +92,6 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         self.Loaded = true;
 
         // Call the optional callback
-        if(callback !== null) {
-            callback(self);
-        }
-    };
-    $.ajax(params);
-};
-
-TrackViewModel.prototype.delete = function(callback, errorCallback) {
-    var self = this;
-
-    // Set up the parameters to delete the track
-    var params = getBaseAjaxParams("DELETE", serverAddress + "/tracks/" + self.Id);
-    params.error = function(xhr) {
-        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to delete track for unknown reason.")
-    };
-    params.success = function(xhr) {
-        // That's it, we're done here. To make sure no one tries anything silly, unload the track
-        self.Loaded = false;
-
         if(callback !== null) {
             callback(self);
         }
@@ -126,7 +151,7 @@ TrackViewModel.prototype.uploadArt = function(input, form, errorCallback) {
         error: function (xhr) {
             // Hide the spinner
             $("#aaSpinner").hide();
-            errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track metadata for unknown reason.");
+            errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track album art for unknown reason.");
         }
     });
-}
+};
