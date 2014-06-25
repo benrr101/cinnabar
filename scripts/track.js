@@ -8,8 +8,9 @@ function TrackViewModel() {
     var self = this;
 
     // NON-OBSERVABLE //////////////////////////////////////////////////////
-    self.Id = null;                 // The GUID of the track
-    self.Loaded = false;            // Whether or not the track has been fetched from the server
+    self.Id = null;                     // The GUID of the track
+    self.Loaded = false;                // Whether or not the track has been fetched from the server
+    self.LoadCheckIntervalId = null;    // The interval ID of the load checking method
 
     // OBSERVABLE //////////////////////////////////////////////////////////
     self.ArtHref = ko.observable(null);         // The URL for this track's art
@@ -23,6 +24,18 @@ function TrackViewModel() {
 
 // ACTIONS /////////////////////////////////////////////////////////////////
 // AJAX ////////////////////////////////////////////////////////////////////
+TrackViewModel.prototype.checkReady = function() {
+    var self = this;
+
+    // Fetch the track and see if it's successful
+    self.fetch(function() {
+        // Track is ready, we can stop this madness!
+        clearInterval(self.LoadCheckIntervalId);
+    }, function() {
+        // No success yet. Don't do anything.
+    });
+};
+
 TrackViewModel.prototype.delete = function(callback, errorCallback) {
     var self = this;
 
@@ -91,6 +104,7 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         // Store the information we don't already have
         self.Qualities(xhr.Qualities);
         self.ArtHref(xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null);
+        self.Ready(true);
         self.Loaded = true;
 
         // Call the optional callback
@@ -124,6 +138,7 @@ TrackViewModel.prototype.replace = function(formId, successCallback, alertCallba
         beforeSubmit: function() {
             // Set this track as not ready
             self.Ready(false);
+            self.Loaded = false;
             self.UploadProgress(0);
         },
         uploadProgress: function(progress) {
@@ -133,10 +148,13 @@ TrackViewModel.prototype.replace = function(formId, successCallback, alertCallba
         success: function() {
             // Hide the spinner/percentage but keep the button disabled.
             alertCallback("Your upload was successful! This track will be unavailable until the track is processed on the server.");
-            self.uploadProgress(false);
+            self.UploadProgress(false);
             if(successCallback != null) {
                 successCallback();
             }
+
+            // Set up the infinichecker to run every minute.
+            self.LoadCheckIntervalId = setInterval(function() { self.checkReady(); }, 60000);
         },
         error: function(xhr) {
             self.Ready(true);
