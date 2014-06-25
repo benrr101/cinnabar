@@ -17,6 +17,8 @@ function TrackViewModel() {
     self.Metadata = ko.observableDictionary();  // The dictionary of metadata available for the track
     self.Qualities = ko.observableArray();      // The list of qualities that are available for the track
                                                 // NOTE: This must be observable in order for download lists to work
+    self.Ready = ko.observable(true);           // Whether or not the track is ready. They usually are.
+    self.UploadProgress = ko.observable(false); // The percent progress of any active upload on this track
 }
 
 // ACTIONS /////////////////////////////////////////////////////////////////
@@ -107,7 +109,7 @@ TrackViewModel.prototype.resetMetadata = function(callback, errorCallback){
     self.fetch(callback, errorCallback);
 };
 
-TrackViewModel.prototype.replace = function(formId, errorCallback) {
+TrackViewModel.prototype.replace = function(formId, successCallback, alertCallback, errorCallback) {
     var self = this;
 
     // Get the form element to submit
@@ -119,10 +121,26 @@ TrackViewModel.prototype.replace = function(formId, errorCallback) {
         type: "PUT",
         dataType: "json",
         xhrFields: { withCredentials: true},
+        beforeSubmit: function() {
+            // Set this track as not ready
+            self.Ready(false);
+            self.UploadProgress(0);
+        },
+        uploadProgress: function(progress) {
+            // Update the percentage completed
+            self.UploadProgress(Math.floor(progress.loaded * 100 / progress.total));
+        },
         success: function() {
-            alert("Successfully uploaded.");
+            // Hide the spinner/percentage but keep the button disabled.
+            alertCallback("Your upload was successful! This track will be unavailable until the track is processed on the server.");
+            self.uploadProgress(false);
+            if(successCallback != null) {
+                successCallback();
+            }
         },
         error: function(xhr) {
+            self.Ready(true);
+            self.UploadProgress(false);
             errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to update track album art for unknown reason.");
         }
     });

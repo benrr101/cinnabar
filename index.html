@@ -337,21 +337,25 @@
                             <div style='float: left;'>
                                 <input id='albumArtFile' type='file' name='albumArtFile' style='display: none'
                                        data-bind="event: {change: function() { uploadArt('albumArtForm', $root.generalError); }}"/>
-                                <button data-bind="click: function() { fireFileDialog('albumArtFile'); }">Upload New Art</button>
-                                <button data-bind="visible: ArtHref, click: function() { deleteArt($root.generalError) }">Delete Current Art</button>
+                                <button data-bind="click: function() { fireFileDialog('albumArtFile'); }, enable: Ready()">Upload New Art</button>
+                                <button data-bind="visible: ArtHref, click: function() { deleteArt($root.generalError) }, enable: Ready()">Delete Current Art</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </div>
             <div class='row'>
-                <button data-bind="click: function() { submitMetadata($root.showAllTracks, $root.generalError) }">Edit Metadata</button>
+                <button data-bind="click: function() { submitMetadata($root.showAllTracks, $root.generalError) }, enable: Ready()">Edit Metadata</button>
                 <form id='replaceTrackForm' style="display: inline">
-                    <button data-bind="click: function() { fireFileDialog('replaceTrackFile'); }">Replace Track</button>
+                    <button id='replaceTrackButton'
+                            data-bind="click: function() { fireFileDialog('replaceTrackFile'); }, enable: Ready()">
+                        <span data-bind="visible: UploadProgress, text: UploadProgress() + '%'"></span>
+                        <span data-bind="visible: Ready()">Replace Track</span>
+                    </button>
                     <input id='replaceTrackFile' type='file' name='replaceTrackFile' style='display: none'
-                           data-bind="event: {change: function() { replace('replaceTrackForm', $root.generalError); }}" />
+                           data-bind="event: {change: function() { replace('replaceTrackForm', $root.showAllTracks, $root.generalAlert, $root.generalError); }}" />
                 </form>
-                <button data-bind="click: function() { resetMetadata($root.showAllTracks, $root.generalError) }">Cancel</button>
+                <button data-bind="click: function() { resetMetadata($root.showAllTracks, $root.generalError) }">Close</button>
             </div>
         </div>
         <h2>Download Track</h2>

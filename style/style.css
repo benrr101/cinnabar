@@ -6,8 +6,10 @@ body { height: 100%; margin:0; padding:0; font-family: "SS", sans-serif; color: 
 h1, h2, h3, h4 { font-weight: normal; }
 input, select, textarea { border:0; margin:0; padding: 8px 10px 8px 10px; background-color: #dcdcdc; color: #1f1f21; font-family:"SS", sans-serif; font-size: 0.875em; }
 button { border:0; padding: 10px 20px; margin:0; margin-right: 20px; margin-bottom: 20px; font-family:"SS", sans-serif;
-    background-color: #dcdcdc; color: #1f1f21;
+    background-color: #dcdcdc; color: #1f1f21; font-weight: bold;
     transition: all ease 0.25s; -webkit-transition: all ease 0.25s; }
+button:disabled { color: #7A7A7A; }
+button:disabled:hover { background-color: #dcdcdc; cursor: default; }
 button:hover { background-color: #a5a5a5; cursor:pointer; }
 ul {padding: 0; margin: 0;}
 li { list-style: none; }
