@@ -500,6 +500,7 @@
                                    css: {selected: $root.selectedTracks.indexOf($index()) >= 0}
                                    ">
                         <td class='playIndicator'>
+                            <img src='img/spinner_small.png' alt='Not Ready' title='This track is not ready' data-bind="visible: !Ready()" />
                             <span class='playIndicatorPlaying' data-bind="click: $root.playback().beginPlayback.bind($data, $root.trackVisibleTracks()), visible: $root.playingPane() == $root.visiblePane() && $root.playback().track() && $root.playback().track().Id == Id">
                                 <img src='img/play_small.png' alt='Play' title='This track is playing'/>
                             </span>

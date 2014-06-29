@@ -28,12 +28,7 @@ TrackViewModel.prototype.checkReady = function() {
     var self = this;
 
     // Fetch the track and see if it's successful
-    self.fetch(function() {
-        // Track is ready, we can stop this madness!
-        clearInterval(self.LoadCheckIntervalId);
-    }, function() {
-        // No success yet. Don't do anything.
-    });
+    self.fetch(null, null);
 };
 
 TrackViewModel.prototype.delete = function(callback, errorCallback) {
@@ -94,7 +89,9 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
     // Set up a ajax request for the track
     var params = getBaseAjaxParams("GET", serverAddress + "/tracks/" + self.Id);
     params.error = function(xhr) {
-        errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track for unknown reason.")
+        if(errorCallback != null) {
+            errorCallback(xhr.status != 0 ? xhr.responseJSON.Message : "Failed to lookup track for unknown reason.");
+        }
     };
     params.success = function(xhr) {
         // Restore the metadata to force a reload of correct data
@@ -106,6 +103,12 @@ TrackViewModel.prototype.fetch = function(callback, errorCallback) {
         self.ArtHref(xhr.ArtHref != null ? serverAddress + '/' + xhr.ArtHref : null);
         self.Ready(true);
         self.Loaded = true;
+
+        // Clear any interval that is being used on this track
+        if(self.LoadCheckIntervalId != null) {
+            clearInterval(self.LoadCheckIntervalId);
+            self.LoadCheckIntervalId = null;
+        }
 
         // Call the optional callback
         if(callback !== null) {

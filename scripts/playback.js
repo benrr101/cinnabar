@@ -58,8 +58,10 @@ function PlaybackViewModel() {
 
             // Load the previous track
             var track = self.nowPlayingList[self.nowPlayingIndex];
-            if(!track.Loaded) {
-                track.fetch(self.playTrack, self.generalError)
+            if(!track.Ready()) {
+                self.previousTrack();
+            } else if(!track.Loaded) {
+                track.fetch(self.playTrack, vm.viewModel.generalError)
             } else {
                 self.playTrack(track);
             }
@@ -88,7 +90,9 @@ function PlaybackViewModel() {
         if(self.queue().length > 0) {
             var nextTrack = self.queue.shift();
             if(!nextTrack.Loaded) {
-                nextTrack.fetch(self.playTrack, vm.viewModel.generalError)
+                nextTrack.fetch(self.playTrack, vm.viewModel.generalError);
+            } else if(!nextTrack.Ready()) {
+                self.nextTrack();
             } else {
                 self.playTrack(nextTrack);
             }
@@ -119,7 +123,9 @@ function PlaybackViewModel() {
 
         // Load the next track
         var track = self.nowPlayingList[self.nowPlayingIndex];
-        if(!track.Loaded) {
+        if(!track.Ready()) {
+            self.nextTrack();
+        } else if(!track.Loaded) {
             track.fetch(self.playTrack, vm.viewModel.generalError)
         } else {
             self.playTrack(track);
@@ -191,7 +197,9 @@ function PlaybackViewModel() {
 
         track = self.nowPlayingList[self.nowPlayingIndex];
         // @TODO: Remove reference to vm.viewmodel
-        if(!track.Loaded) {
+        if(!track.Ready()) {
+            self.nextTrack();
+        } else if(!track.Loaded) {
             track.fetch(self.playTrack, vm.viewModel.generalError);
         } else {
             self.playTrack(track);
@@ -271,10 +279,9 @@ function PlaybackViewModel() {
         // Calculate the offset into the track to set
         var trackDuration = self.audioObject.duration;
         var length = parseInt($("#scrubber").css("width").replace("px",""));
-        var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
 
         // Set the current time on the audio object
-        self.audioObject.currentTime = newTime;
+        self.audioObject.currentTime = trackDuration * (parseInt($("#played").css("width").replace("px", "")) + ui.position.left) / length;
 
         // Start the scrubber up again
         self.scrubberEnabled = true;

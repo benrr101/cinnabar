@@ -475,8 +475,12 @@ function ViewModel() {
     self.editMetadata = function() {
         // Grab the selected track
         var track = self.trackVisibleTracks()[self.selectedTracks()[0]];
-        if(!track.Loaded) {
+        if(!track.Loaded ) {
             track.fetch(null, self.generalError);
+        }
+        if(!track.Ready()) {
+            self.generalError("This track is currently being processed by the server. Please try again later.");
+            return;
         }
 
         // Show the metadata editor
