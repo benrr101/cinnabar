@@ -117,7 +117,7 @@
             <li data-bind="visible: visiblePane().startsWith('static'), click: removeTracksFromPlaylist">
                 Remove from Playlist
             </li>
-            <li data-bind="click: editMetadata">Edit Metadata</li>
+            <li data-bind="click: editMetadata, visible: selectedTracks().length == 1">Edit Metadata</li>
             <li data-bind="click: deleteTracks">Delete</li>
         </ul>
     </div>
