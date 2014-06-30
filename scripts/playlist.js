@@ -80,7 +80,7 @@ PlaylistViewModel.prototype.fetch = function(callback, errorCallback) {
 /**
  * Adds the provided list of track guids to this static playlist.
  * @throws  Error   Thrown if this method is called on an automatic playlist.
- * @param selection Array<guid> An array of track guids to add to the playlist.
+ * @param selection Array<TrackViewModel> An array of tracks to add to the playlist.
  * @param errorCallback (Function|null) An optional callback for when the ajax
  *                                      request fails.
  */
@@ -98,7 +98,7 @@ PlaylistViewModel.prototype.addTracks = function(selection, errorCallback) {
     selection.forEach(function(item) {
         // Build a request to add the tracks
         var params = getBaseAjaxParams("POST", serverAddress + self.Href);
-        params.error = params.error = function(jqXHR) {
+        params.error = function(jqXHR) {
             if(errorCallback !== null)
                 errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to add tracks to playlist for unknown reason.");
         };
@@ -159,6 +159,43 @@ PlaylistViewModel.prototype.createPlaylist = function(callback, errorCallback) {
 
     // Call that mofo!
     $.ajax(params);
+};
+
+/**
+ * Removes a set of track indices from this playlist
+ * @param selection Array<int>  The indices of tracks to remove from the playlist
+ * @param errorCallback Function    A callback for failing completion
+ */
+PlaylistViewModel.prototype.removeTracks = function(selection, errorCallback) {
+    var self = this;
+
+    // Only run this if this is a static playlist
+    if(self.Type != "static") {
+        throw new Error("Cannot remove tracks from an auto playlist.");
+        return;
+    }
+
+    // Build an ajax request for EACH selected track
+    // TODO: Do this with a single batch call if Dolomite ever supports it
+    selection.forEach(function(item) {
+        // Build a request to add the tracks
+        // NOTE: track order is 1 indexed, so we need to offset our index
+        var params = getBaseAjaxParams("DELETE", serverAddress + self.Href + '/' + (item + 1));
+        params.error = function(jqXHR) {
+            if(errorCallback !== null)
+                errorCallback(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to remove tracks from playlist for unknown reason.");
+        };
+        params.success = function() {
+            // If the playlist has already been loaded, then force a reload of the playlist
+            // We do a full reload since due to the async nature of the requests, the order
+            // of the playlist COULD be wrong. When the batch is supported in dolomite, this
+            // will not be a problem, and we can just tack the new track onto the end
+            self.fetch(null, errorCallback);
+        };
+
+        // Fire off the request
+        $.ajax(params);
+    });
 };
 
 /**

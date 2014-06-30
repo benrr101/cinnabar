@@ -58,8 +58,10 @@ function PlaybackViewModel() {
 
             // Load the previous track
             var track = self.nowPlayingList[self.nowPlayingIndex];
-            if(!track.Loaded) {
-                track.fetch(self.playTrack, self.generalError)
+            if(!track.Ready()) {
+                self.previousTrack();
+            } else if(!track.Loaded) {
+                track.fetch(self.playTrack, vm.viewModel.generalError)
             } else {
                 self.playTrack(track);
             }
@@ -88,7 +90,9 @@ function PlaybackViewModel() {
         if(self.queue().length > 0) {
             var nextTrack = self.queue.shift();
             if(!nextTrack.Loaded) {
-                nextTrack.fetch(self.playTrack, vm.viewModel.generalError)
+                nextTrack.fetch(self.playTrack, vm.viewModel.generalError);
+            } else if(!nextTrack.Ready()) {
+                self.nextTrack();
             } else {
                 self.playTrack(nextTrack);
             }
@@ -119,7 +123,9 @@ function PlaybackViewModel() {
 
         // Load the next track
         var track = self.nowPlayingList[self.nowPlayingIndex];
-        if(!track.Loaded) {
+        if(!track.Ready()) {
+            self.nextTrack();
+        } else if(!track.Loaded) {
             track.fetch(self.playTrack, vm.viewModel.generalError)
         } else {
             self.playTrack(track);
@@ -191,7 +197,9 @@ function PlaybackViewModel() {
 
         track = self.nowPlayingList[self.nowPlayingIndex];
         // @TODO: Remove reference to vm.viewmodel
-        if(!track.Loaded) {
+        if(!track.Ready()) {
+            self.nextTrack();
+        } else if(!track.Loaded) {
             track.fetch(self.playTrack, vm.viewModel.generalError);
         } else {
             self.playTrack(track);
@@ -203,17 +211,17 @@ function PlaybackViewModel() {
         var trackQuality;
         // @TODO: Remove references to vm.viewmodel
         for(var q = vm.viewModel.settings().quality; q >= 0; --q) {
-            if(typeof track.Qualities[q] !== "undefined") {
-                trackQuality = track.Qualities[q];
+            if(typeof track.Qualities()[q] !== "undefined") {
+                trackQuality = track.Qualities()[q];
                 break;
             }
         }
 
         // Create an audio thing if needed
         if(self.audioObject !== null) {
-            self.audioObject.src = serverAddress + trackQuality.Href;
+            self.audioObject.src = serverAddress + '/' + trackQuality.Href;
         } else {
-            self.audioObject = new Audio(serverAddress + trackQuality.Href);
+            self.audioObject = new Audio(serverAddress + '/' + trackQuality.Href);
             self.audioObject.volume = self.volume();
             self.audioObject.ontimeupdate = self.onTimeUpdate;
             self.audioObject.onended = self.nextTrack;
@@ -235,7 +243,7 @@ function PlaybackViewModel() {
 
     self.dequeueTrack = function(index) {
         // Do some fancy splicing to remove the offending index
-        self.queue.splice(index(), 1);
+        self.queue.splice(index, 1);
     };
 
     self.setVolume = function(percent) {
@@ -271,10 +279,9 @@ function PlaybackViewModel() {
         // Calculate the offset into the track to set
         var trackDuration = self.audioObject.duration;
         var length = parseInt($("#scrubber").css("width").replace("px",""));
-        var newTime = trackDuration * (parseInt($("#played").css("width").replace("px","")) + ui.position.left) / length;
 
         // Set the current time on the audio object
-        self.audioObject.currentTime = newTime;
+        self.audioObject.currentTime = trackDuration * (parseInt($("#played").css("width").replace("px", "")) + ui.position.left) / length;
 
         // Start the scrubber up again
         self.scrubberEnabled = true;

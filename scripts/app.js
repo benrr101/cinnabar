@@ -9,8 +9,8 @@ jQuery.support.cors = true;
 var apiKey = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
 var usernameStorageKey = "CoDUsername";
 var settingsStorageKey = "CoDSettings";
-var serverAddress = "https://dolomitetesting.cloudapp.net/";
-//var serverAddress = "https://localhost/"
+var serverAddress = "https://dolomitetesting.cloudapp.net";
+//var serverAddress = "https://localhost"
 var defaultSettings = {
     quality: "2",
     shuffleMode: "order"
@@ -23,14 +23,14 @@ var metadataFields = [
     {TagName: "Album", DisplayName: "Album", Type: "string"},
     {TagName: "Genre", DisplayName: "Genre", Type: "string"},
     {TagName: "Year", DisplayName: "Year", Type: "numeric"},
-    {TagName: "Track", DisplayName: "Track", Type: "string"},
+    {TagName: "Track", DisplayName: "Track", Type: "numeric"},
     {TagName: "TrackCount", DisplayName: "Track Count", Type: "numeric"},
     {TagName: "Disc", DisplayName: "Disc", Type: "numeric"},
     {TagName: "Lyrics", DisplayName: "Lyrics", Type: "string"},
     {TagName: "BeatsPerMinute", DisplayName: "BPM", Type: "numeric"},
     {TagName: "Conductor", DisplayName: "Conductor", Type: "string"},
     {TagName: "Copyright", DisplayName: "Copyright", Type: "string"},
-    {TagName: "Comment", DisplayName: "Copyright", Type: "string"},
+    {TagName: "Comment", DisplayName: "Comment", Type: "string"},
     {TagName: "DiscCount", DisplayName: "Disc Count", Type: "numeric"},
     {TagName: "DateAdded", DisplayName: "Date Added", Type: "date"},
     {TagName: "PlayCount", DisplayName: "Play Count", Type: "numeric"},
@@ -78,6 +78,12 @@ function getBaseAjaxParams(method, url) {
     };
 }
 
+function fireFileDialog(elementId) {
+    var element = $("#" + elementId);
+
+    element.click();
+}
+
 // UTILITY FUNCTIONS ///////////////////////////////////////////////////////
 /**
  * Generates a text string representation of a track number. Formats look like:
@@ -119,6 +125,16 @@ function calculateTrackTime(time) {
 
     // Put it together into a string
     return (hours > 0 ? String(hours) + ":" : "") + minutes + ":" + seconds;
+}
+
+/**
+ * Generates a human-readable date string from a unix timestamp
+ * @param unix  int A unix timestamp
+ * @returns string  A human readable version of the timestamp
+ */
+function calculateDate(unix) {
+    var date = new Date(unix * 1000);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
 }
 
 function calculateTimeVerbal(time) {
@@ -181,7 +197,8 @@ ko.bindingHandlers.dropTrack = {
                 // Convert the selected indices list to a list of tracks
                 var selectedTracks = [];
                 for(var i = 0; i < viewModel.selectedTracks().length; ++i) {
-                    selectedTracks.push(viewModel.trackVisibleTracks()[i]);
+                    var trackIndex = viewModel.selectedTracks()[i];
+                    selectedTracks.push(viewModel.trackVisibleTracks()[trackIndex]);
                 }
 
                 playlist.addTracks(selectedTracks, viewModel.generalError);
@@ -245,6 +262,7 @@ function ViewModel() {
 
     // DATA ////////////////////////////////////////////////////////////////
     self.generalError = ko.observable(false);   // Used for storing general error messages that will be visible in a modal
+    self.generalAlert = ko.observable(false);   // Used for showing general messages that are not error worthy
 
     self.loginLoggedIn = ko.observable(false);  // Used for determining if the login form should be displayed. On launch, we are not logged in.
     self.loginNotice   = ko.observable(null);   // Used for storing error messages that should be shown to the user.
@@ -254,15 +272,24 @@ function ViewModel() {
     self.settingsVisible = ko.observable(false);    // Whether or not the settings modal is visible
     self.settings = ko.observable(defaultSettings); // The settings object for the session
 
+    self.aboutVisible = ko.observable(false);       // Whether or not the about modal is visible
+
     self.trackLibrary = {};                          // Used for caching all tracks.
     self.autoPlaylists = ko.observableArray();       // Used for storing the auto playlists
     self.staticPlaylists = ko.observableArray();     // Used for storing the static playlists
 
+    self.trackEdit = ko.observable(null);           // The track that will have its metadata edited
     self.staticPlaylistEdit = ko.observable(null);  // The static playlist that's on the editing table
     self.autoPlaylistEdit = ko.observable(null);    // The auto playlist that's on the editing table
 
     self.trackVisibleTracks = ko.observableArray();     // Used for storing the list of VISIBLE tracks in the tracks pane
+    self.visiblePlaylist = null;                        // The visible playlist
     self.visiblePane = ko.observable("tracks");         // Used to mark which tab is visible
+
+    self.visibleContextMenu = ko.observable(false);         // Which context menu is visible
+    self.visibleContextMenuTop = ko.observable(0);          // The top position of the context menu
+    self.visibleContextMenuXPos = ko.observable(false);     // The x position of the menu. This is calculated in the data-bind based on the float
+    self.visibleContextMenuFloat = ko.observable("left");   // Whether the menu position should float to the left or right
 
     self.nowPlayingList = [];                           // Storage for the now playing playlist
     self.nowPlayingListSorted = [];                     // Storage for the now playing playlist, but sorted.
@@ -280,7 +307,7 @@ function ViewModel() {
 
     // ACTIONS /////////////////////////////////////////////////////////////
     self.loginSubmitLogin = function() {
-        var params = getBaseAjaxParams("POST", serverAddress + "users/login");
+        var params = getBaseAjaxParams("POST", serverAddress + "/users/login");
         params.data  = JSON.stringify({Username: self.loginUsername(), Password: self.loginPassword(), ApiKey: apiKey});
         params.error = function(jqXHR) { // Show an error message
             self.loginNotice(jqXHR.status != 0 && jqXHR.responseJSON ? jqXHR.responseJSON.Message : "Login failed for unknown reason.");
@@ -297,6 +324,19 @@ function ViewModel() {
         $.ajax(params);
     };
 
+    self.submitLogout = function() {
+        // Purge the stored settings and logged in username, forget we had a session
+        sessionStorage.removeItem(settingsStorageKey);
+        sessionStorage.removeItem(usernameStorageKey);
+
+        // Build the request
+        var params = getBaseAjaxParams("POST", serverAddress + "/users/logout");
+        params.error = function() { alert("Logout failed."); }
+        params.success = function() { alert("You have been successfully logged out.")}
+
+        $.ajax(params);
+    };
+
     self.bootRequests = function() {
         // Ajax requests
         self.fetchAutoPlaylists();
@@ -310,7 +350,7 @@ function ViewModel() {
     };
 
     self.fetchAutoPlaylists = function() {
-        var params = getBaseAjaxParams("GET", serverAddress + "playlists/auto/");
+        var params = getBaseAjaxParams("GET", serverAddress + "/playlists/auto/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup auto playlists for unknown reason.");
         };
@@ -327,7 +367,7 @@ function ViewModel() {
     };
 
     self.fetchStaticPlaylists = function() {
-        var params = getBaseAjaxParams("GET", serverAddress + "playlists/static/");
+        var params = getBaseAjaxParams("GET", serverAddress + "/playlists/static/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup static playlists for unknown reason.");
         };
@@ -353,7 +393,7 @@ function ViewModel() {
     };
 
     self.fetchTracks = function() {
-        var params = getBaseAjaxParams("GET", serverAddress + "tracks/");
+        var params = getBaseAjaxParams("GET", serverAddress + "/tracks/");
         params.error = function(jqXHR) { // Show error message
             self.generalError(jqXHR.status != 0 ? jqXHR.responseJSON.Message : "Failed to lookup track library for unknown reason.");
         };
@@ -374,7 +414,7 @@ function ViewModel() {
     };
 
     self.loadUserGeneralInfo = function(username) {
-        var params = getBaseAjaxParams("GET", serverAddress + "users/" + username);
+        var params = getBaseAjaxParams("GET", serverAddress + "/users/" + username);
         params.error = function(jqXHR) {
             if(jqXHR.status == 401) {       // Not authorized; not logged in.
                 self.loginNotice("Your session expired. Please confirm your credentials.");
@@ -394,20 +434,88 @@ function ViewModel() {
     };
 
     // NON-AJAX ACTIONS ////////////////////////////////////////////////////
-    self.enqueueTrack = function(track) {
-        // Pass the request to the playback vm
-        self.playback().enqueueTrack(track);
+    self.enqueueTracks = function() {
+        // Pass the tracks to be enqueued to the playback view model
+        $.each(self.selectedTracks(), function() {
+            self.playback().enqueueTrack(self.trackVisibleTracks()[this]);
+        });
     };
 
-    self.dequeueTrack = function(index) {
-        // Remove the track from the visible queue, then pass the call to the playback vm
-        self.trackVisibleTracks.splice(index(), 1);
-        self.playback().dequeueTrack(index);
+    self.dequeueTracks = function() {
+        // Remove all selected track from the visible queue, then pass the call to the playback vm
+        $.each(self.selectedTracks(), function() {
+            self.trackVisibleTracks.splice(this, 1);
+            self.playback().dequeueTrack(this);
+        });
+    };
+
+    self.deleteTracks = function() {
+        // Call the delete handler on all the selected tracks
+        $.each(self.selectedTracks().sort().reverse(), function() {
+            // Grab the track in question
+            var track = self.trackVisibleTracks.splice(this, 1);
+            track[0].delete(null, self.generalError);
+
+            // Remove the track from the library
+            delete self.trackLibrary[track.Id];
+        });
+
+        // Purge all loaded playlists to require that they be reloaded
+        $.each(self.autoPlaylists(), function() {
+            this.Loaded = false;
+        });
+        $.each(self.staticPlaylists(), function() {
+            this.Loaded = false;
+        });
+
+        // Reset the selection
+        self.clearSelection();
+    };
+
+    self.editMetadata = function() {
+        // Grab the selected track
+        var track = self.trackVisibleTracks()[self.selectedTracks()[0]];
+        if(!track.Loaded ) {
+            track.fetch(null, self.generalError);
+        }
+        if(!track.Ready()) {
+            self.generalError("This track is currently being processed by the server. Please try again later.");
+            return;
+        }
+
+        // Show the metadata editor
+        self.visiblePane("metadata");
+        self.trackEdit(track);
+    };
+
+    self.addTracksToPlaylist = function(playlist) {
+        // Convert the selected indices list to a list of tracks
+        var selectedTracks = [];
+        for(var i = 0; i < self.selectedTracks().length; ++i) {
+            var trackIndex = self.selectedTracks()[i];
+            selectedTracks.push(self.trackVisibleTracks()[trackIndex]);
+        }
+
+        playlist.addTracks(selectedTracks, self.generalError);
+    };
+
+    self.removeTracksFromPlaylist = function() {
+        // Remove the tracks from the visible list
+        $.each(self.selectedTracks().sort().reverse(), function() {
+            self.trackVisibleTracks.splice(this, 1);
+        });
+
+        // Pass the selection of indices to the playlist viewmodel
+        self.visiblePlaylist.removeTracks(self.selectedTracks(), self.generalError);
+
+        // Clear out the selection
+        self.clearSelection();
     };
 
     self.showPlaylist = function(playlist) {
         // Set the visible pane
         self.visiblePane(playlist.Type + playlist.Id);
+        self.visiblePlaylist = playlist;
 
         // Clean out the visible tracks and add the playlist's tracks
         self.trackVisibleTracks($.map(playlist.Tracks(), function(e) {
@@ -421,9 +529,10 @@ function ViewModel() {
     self.showQueue = function() {
         // Set the visible pane
         self.visiblePane("queue");
+        self.visiblePlaylist = null;
 
         // Clear out the current visible tracks and make the queue visible
-        self.trackVisibleTracks(self.playback().queue);
+        self.trackVisibleTracks(self.playback().queue());
 
         // Clear the selection
         self.clearSelection();
@@ -432,6 +541,7 @@ function ViewModel() {
     self.showAllTracks = function() {
         // Set the visible pane
         self.visiblePane("tracks");
+        self.visiblePlaylist = null;
 
         var keys = [];
         for(var i in self.trackLibrary) {
@@ -549,6 +659,48 @@ function ViewModel() {
 
         // Clear out the playlist for edit
         self.staticPlaylistEdit(null);
+    };
+
+    self.showTrackContextMenu = function(index, event) {
+        // Select the right-clicked track, but only do so if the track that
+        // was right-clicked was not in the selection
+        if(self.selectedTracks.indexOf(index) < 0) {
+            self.selectTrack(index, {});
+        }
+
+        // @magicNumbers The -5 is to make the cursor appear inside the context menu, not on the edge
+
+        // Show the context menu
+        self.visibleContextMenu("track");
+        self.visibleContextMenuTop(event.pageY - 5);
+
+        // Flip the positioning of the context menu if the cursor is too far to the right
+        var innerWidth = window.innerWidth;
+        if(event.pageX / innerWidth > .75) {
+            self.visibleContextMenuFloat("right");
+            self.visibleContextMenuXPos(innerWidth - event.pageX - 5);
+        } else {
+            self.visibleContextMenuFloat("left");
+            self.visibleContextMenuXPos(event.pageX - 5);
+        }
+    };
+
+    self.hideContextMenu = function() {
+        self.visibleContextMenu(false);
+    };
+
+    self.showAbout = function() {
+        self.aboutVisible(true);
+    };
+
+    self.hideAbout = function() {
+        self.aboutVisible(false);
+    };
+
+    self.closeGeneral = function() {
+        // Reset the general alert and error
+        self.generalError(false);
+        self.generalAlert(false);
     };
 
     self.volumeDragStart = function() {
